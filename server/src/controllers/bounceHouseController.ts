@@ -119,6 +119,10 @@ export const deleteBounceHouse = async (req: Request, res: Response) => {
 
 export const addReview = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const bounceHouse = await BounceHouse.findById(req.params.id);
     if (!bounceHouse) {
       return res.status(404).json({ message: 'Bounce house not found' });

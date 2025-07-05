@@ -33,6 +33,7 @@ export interface IBounceHouse extends Document {
     comment: string;
     date: Date;
   }[];
+  company: mongoose.Types.ObjectId;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -71,6 +72,7 @@ const BounceHouseSchema = new Schema({
     comment: { type: String, required: true },
     date: { type: Date, default: Date.now }
   }],
+  company: { type: Schema.Types.ObjectId, ref: 'Company', required: true },
   isActive: { type: Boolean, default: true },
 }, {
   timestamps: true

@@ -5,11 +5,15 @@ import User from '../models/User';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16'
+  apiVersion: '2022-11-15'
 });
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const {
       bounceHouseId,
       startDate,
@@ -50,6 +54,9 @@ export const createBooking = async (req: Request, res: Response) => {
       customer: req.user.stripeCustomerId
     });
 
+    // Get payment method details
+    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+
     // Create booking
     const booking = new Booking({
       user: req.user._id,
@@ -62,8 +69,9 @@ export const createBooking = async (req: Request, res: Response) => {
       paymentStatus: 'paid',
       paymentMethod: {
         type: 'card',
-        last4: paymentIntent.payment_method_details?.card?.last4 || ''
-      }
+        last4: paymentMethod.card?.last4 || ''
+      },
+      paymentIntentId: paymentIntent.id
     });
 
     // Update bounce house availability
@@ -87,6 +95,10 @@ export const createBooking = async (req: Request, res: Response) => {
 
 export const getBookings = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const bookings = await Booking.find({ user: req.user._id })
       .populate('bounceHouse')
       .sort({ startDate: -1 });
@@ -98,6 +110,10 @@ export const getBookings = async (req: Request, res: Response) => {
 
 export const getBookingById = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const booking = await Booking.findById(req.params.id)
       .populate('bounceHouse');
     
@@ -118,6 +134,10 @@ export const getBookingById = async (req: Request, res: Response) => {
 
 export const cancelBooking = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const booking = await Booking.findById(req.params.id);
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
@@ -135,7 +155,7 @@ export const cancelBooking = async (req: Request, res: Response) => {
     }
 
     // Process refund if payment was made
-    if (booking.paymentStatus === 'paid') {
+    if (booking.paymentStatus === 'paid' && booking.paymentIntentId) {
       await stripe.refunds.create({
         payment_intent: booking.paymentIntentId
       });

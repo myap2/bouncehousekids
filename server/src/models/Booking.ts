@@ -19,6 +19,7 @@ export interface IBooking extends Document {
     type: string;
     last4: string;
   };
+  paymentIntentId?: string;
   cancellationReason?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -69,6 +70,9 @@ const BookingSchema = new Schema({
   paymentMethod: {
     type: { type: String, required: true },
     last4: { type: String, required: true }
+  },
+  paymentIntentId: {
+    type: String
   },
   cancellationReason: {
     type: String

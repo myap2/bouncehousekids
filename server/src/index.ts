@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import userRoutes from './routes/userRoutes';
 import bounceHouseRoutes from './routes/bounceHouseRoutes';
 import bookingRoutes from './routes/bookingRoutes';
+import companyRoutes from './routes/companyRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +29,7 @@ mongoose.connect(MONGODB_URI)
 app.use('/api/users', userRoutes);
 app.use('/api/bounce-houses', bounceHouseRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/companies', companyRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {
