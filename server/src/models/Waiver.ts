@@ -4,6 +4,7 @@ export interface IWaiver extends Document {
   user: mongoose.Types.ObjectId;
   company: mongoose.Types.ObjectId;
   booking?: mongoose.Types.ObjectId;
+  waiverTemplate?: mongoose.Types.ObjectId; // Reference to the template used
   participantName: string;
   participantAge: number;
   parentGuardianName?: string;
@@ -21,6 +22,11 @@ export interface IWaiver extends Document {
   isMinor: boolean;
   witnessName?: string;
   witnessSignature?: string;
+  customFieldValues?: Array<{
+    fieldName: string;
+    fieldType: string;
+    value: any;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,6 +45,10 @@ const WaiverSchema = new Schema({
   booking: { 
     type: Schema.Types.ObjectId, 
     ref: 'Booking' 
+  },
+  waiverTemplate: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'WaiverTemplate' 
   },
   participantName: { 
     type: String, 
@@ -113,7 +123,14 @@ const WaiverSchema = new Schema({
   },
   witnessSignature: { 
     type: String 
-  }
+  },
+  customFieldValues: [
+    {
+      fieldName: String,
+      fieldType: String,
+      value: Schema.Types.Mixed
+    }
+  ]
 }, {
   timestamps: true
 });

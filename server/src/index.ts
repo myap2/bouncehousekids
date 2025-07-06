@@ -13,6 +13,7 @@ import bounceHouseRoutes from './routes/bounceHouseRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 import companyRoutes from './routes/companyRoutes';
 import waiverRoutes from './routes/waiverRoutes';
+import companyWaiverRoutes from './routes/companyWaiverRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -79,6 +80,7 @@ app.use('/api/bounce-houses', bounceHouseRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/waivers', waiverRoutes);
+app.use('/api/company-waivers', companyWaiverRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {
