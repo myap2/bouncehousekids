@@ -6,7 +6,7 @@ export interface IUser extends Document {
   password: string;
   firstName: string;
   lastName: string;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'admin' | 'company-admin';
   phone: string;
   address: {
     street: string;
@@ -22,6 +22,8 @@ export interface IUser extends Document {
     isDefault: boolean;
   }[];
   bookings: mongoose.Types.ObjectId[];
+  stripeCustomerId?: string;
+  company?: mongoose.Types.ObjectId;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -50,7 +52,7 @@ const UserSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'admin'],
+    enum: ['customer', 'admin', 'company-admin'],
     default: 'customer'
   },
   phone: {
@@ -73,7 +75,15 @@ const UserSchema = new Schema({
   bookings: [{
     type: Schema.Types.ObjectId,
     ref: 'Booking'
-  }]
+  }],
+  stripeCustomerId: {
+    type: String,
+    sparse: true
+  },
+  company: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company'
+  }
 }, {
   timestamps: true
 });
