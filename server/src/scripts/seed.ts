@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import Company from '../models/Company';
 import User from '../models/User';
 import BounceHouse from '../models/BounceHouse';
+import Waiver from '../models/Waiver';
 import bcrypt from 'bcryptjs';
 
 // Load environment variables
@@ -18,7 +19,8 @@ const seedDatabase = async () => {
     await Promise.all([
       Company.deleteMany({}),
       User.deleteMany({}),
-      BounceHouse.deleteMany({})
+      BounceHouse.deleteMany({}),
+      Waiver.deleteMany({})
     ]);
     console.log('Cleared existing data');
 
@@ -275,6 +277,30 @@ const seedDatabase = async () => {
     ]);
 
     console.log(`Created ${bounceHouses.length} bounce houses`);
+
+    // Create sample waivers
+    const waivers = await Waiver.insertMany([
+      {
+        user: users[2]._id, // Customer user
+        company: companies[0]._id,
+        participantName: 'John Customer Jr.',
+        participantAge: 8,
+        parentGuardianName: 'John Customer',
+        parentGuardianEmail: 'customer@bouncehousekids.com',
+        emergencyContactName: 'Jane Customer',
+        emergencyContactPhone: '(555) 444-4444',
+        medicalConditions: 'None',
+        allergies: 'None',
+        waiverText: 'Sample waiver text for demonstration purposes...',
+        agreedTerms: true,
+        signature: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        isMinor: true,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0 (Test Browser)'
+      }
+    ]);
+
+    console.log(`Created ${waivers.length} sample waivers`);
 
     console.log('Database seeding completed successfully!');
     console.log('\nSample login credentials:');

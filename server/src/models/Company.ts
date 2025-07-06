@@ -39,6 +39,7 @@ export interface ICompany extends Document {
     taxRate: number;
     requiresDeposit: boolean;
     depositPercentage: number;
+    requiresWitness: boolean;
   };
   paymentConfig: {
     stripePublicKey: string;
@@ -105,7 +106,8 @@ const CompanySchema = new Schema({
     deliveryFee: { type: Number, default: 50 },
     taxRate: { type: Number, default: 0.08 },
     requiresDeposit: { type: Boolean, default: true },
-    depositPercentage: { type: Number, default: 50 }
+    depositPercentage: { type: Number, default: 50 },
+    requiresWitness: { type: Boolean, default: false }
   },
   paymentConfig: {
     stripePublicKey: { type: String, required: true },
