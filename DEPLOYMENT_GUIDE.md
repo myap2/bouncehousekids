@@ -9,6 +9,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ## 📋 Pre-Deployment Checklist
 
 ### Required Accounts & Services
+
 - [ ] Domain registrar account (Namecheap, GoDaddy, etc.)
 - [ ] Cloud hosting accounts (choose your preferred option):
   - Frontend: Vercel, Netlify, or AWS S3
@@ -25,6 +26,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 1: Database Setup (MongoDB Atlas)
 
 1. **Create MongoDB Atlas Account**
+
    ```bash
    # Go to https://cloud.mongodb.com/
    # Sign up for free account
@@ -58,12 +60,14 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 2: Backend Deployment (Railway)
 
 1. **Install Railway CLI**
+
    ```bash
    npm install -g @railway/cli
    railway login
    ```
 
 2. **Deploy Backend**
+
    ```bash
    cd server
    railway init
@@ -71,6 +75,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
    ```
 
 3. **Set Environment Variables**
+
    ```bash
    # Set all environment variables in Railway dashboard
    railway variables set NODE_ENV=production
@@ -90,15 +95,17 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 3: Frontend Deployment (Vercel)
 
 1. **Install Vercel CLI**
+
    ```bash
    npm install -g vercel
    vercel login
    ```
 
 2. **Configure Frontend Environment**
+
    ```bash
    cd client
-   
+
    # Create production environment file
    cat > .env.production << EOF
    REACT_APP_API_URL=https://your-backend-url.railway.app
@@ -111,6 +118,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
    ```
 
 3. **Deploy Frontend**
+
    ```bash
    vercel --prod
    ```
@@ -125,6 +133,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
    - Purchase your domain: `bouncehousekids.com`
 
 2. **Configure DNS for Frontend (Vercel)**
+
    ```bash
    # In Vercel dashboard:
    # 1. Go to your project
@@ -132,27 +141,30 @@ This guide will walk you through deploying your Bounce House Kids application fr
    # 3. Add your domain: bouncehousekids.com
    # 4. Add DNS records in your registrar:
    ```
-   
+
    **DNS Records for Registrar:**
+
    ```
    Type: CNAME
    Name: www
    Value: cname.vercel-dns.com
-   
+
    Type: A
    Name: @
    Value: 76.76.19.61
    ```
 
 3. **Configure Custom Domain for Backend**
+
    ```bash
    # In Railway dashboard:
    # 1. Go to your project
    # 2. Click "Settings" → "Domains"
    # 3. Add custom domain: api.bouncehousekids.com
    ```
-   
+
    **Additional DNS Record:**
+
    ```
    Type: CNAME
    Name: api
@@ -172,11 +184,13 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 6: Update Environment Variables
 
 1. **Update Backend CORS**
+
    ```bash
    railway variables set CORS_ORIGIN="https://bouncehousekids.com"
    ```
 
 2. **Update Frontend API URL**
+
    ```bash
    # In Vercel dashboard:
    # Go to Settings → Environment Variables
@@ -201,19 +215,21 @@ This guide will walk you through deploying your Bounce House Kids application fr
    - Minimum: 2GB RAM, 1 CPU, 25GB SSD
 
 2. **Connect to Server**
+
    ```bash
    ssh root@your-server-ip
    ```
 
 3. **Install Docker**
+
    ```bash
    # Update system
    apt update && apt upgrade -y
-   
+
    # Install Docker
    curl -fsSL https://get.docker.com -o get-docker.sh
    sh get-docker.sh
-   
+
    # Install Docker Compose
    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
    chmod +x /usr/local/bin/docker-compose
@@ -222,25 +238,27 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 2: Deploy Application
 
 1. **Clone Repository**
+
    ```bash
    git clone https://github.com/yourusername/bouncehousekids.git
    cd bouncehousekids
    ```
 
 2. **Configure Environment**
+
    ```bash
    # Create production environment file
    cat > .env << EOF
    # Database
    MONGODB_URI=mongodb://admin:password123@mongodb:27017/bouncehousekids?authSource=admin
-   
+
    # Server
    JWT_SECRET=your-super-secure-jwt-secret-key
    STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
    SENDGRID_API_KEY=your-sendgrid-api-key
    SENDGRID_FROM_EMAIL=noreply@bouncehousekids.com
    CORS_ORIGIN=https://bouncehousekids.com
-   
+
    # Client
    REACT_APP_API_URL=https://api.bouncehousekids.com
    REACT_APP_STRIPE_PUBLIC_KEY=pk_live_your_stripe_public_key
@@ -259,6 +277,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 3: Configure Nginx & SSL
 
 1. **Install Nginx**
+
    ```bash
    apt install nginx -y
    systemctl start nginx
@@ -266,12 +285,13 @@ This guide will walk you through deploying your Bounce House Kids application fr
    ```
 
 2. **Configure Nginx**
+
    ```bash
    cat > /etc/nginx/sites-available/bouncehousekids << EOF
    server {
        listen 80;
        server_name bouncehousekids.com www.bouncehousekids.com;
-       
+
        location / {
            proxy_pass http://localhost:3000;
            proxy_set_header Host \$host;
@@ -280,11 +300,11 @@ This guide will walk you through deploying your Bounce House Kids application fr
            proxy_set_header X-Forwarded-Proto \$scheme;
        }
    }
-   
+
    server {
        listen 80;
        server_name api.bouncehousekids.com;
-       
+
        location / {
            proxy_pass http://localhost:5000;
            proxy_set_header Host \$host;
@@ -294,20 +314,21 @@ This guide will walk you through deploying your Bounce House Kids application fr
        }
    }
    EOF
-   
+
    ln -s /etc/nginx/sites-available/bouncehousekids /etc/nginx/sites-enabled/
    nginx -t
    systemctl reload nginx
    ```
 
 3. **Install SSL Certificate**
+
    ```bash
    # Install Certbot
    apt install certbot python3-certbot-nginx -y
-   
+
    # Get SSL certificates
    certbot --nginx -d bouncehousekids.com -d www.bouncehousekids.com -d api.bouncehousekids.com
-   
+
    # Auto-renewal
    crontab -e
    # Add: 0 12 * * * /usr/bin/certbot renew --quiet
@@ -316,15 +337,16 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 4: Configure DNS
 
 1. **Point Domain to Server**
+
    ```
    Type: A
    Name: @
    Value: your-server-ip
-   
+
    Type: A
    Name: www
    Value: your-server-ip
-   
+
    Type: A
    Name: api
    Value: your-server-ip
@@ -337,10 +359,11 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 1: Database Seeding
 
 1. **Run Database Seeds**
+
    ```bash
    # If using cloud backend
    railway run npm run seed
-   
+
    # If using Docker
    docker-compose exec server npm run seed
    ```
@@ -348,26 +371,29 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Step 2: Test Deployment
 
 1. **Frontend Testing**
+
    ```bash
    # Test main site
    curl -I https://bouncehousekids.com
-   
+
    # Should return 200 OK
    ```
 
 2. **Backend Testing**
+
    ```bash
    # Test API endpoint
    curl https://api.bouncehousekids.com/health
-   
+
    # Should return: {"status":"ok"}
    ```
 
 3. **Database Testing**
+
    ```bash
    # Test bounce house listing
    curl https://api.bouncehousekids.com/api/bounce-houses
-   
+
    # Should return JSON array
    ```
 
@@ -400,18 +426,19 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Health Checks
 
 1. **Automated Monitoring**
+
    ```bash
    # Create monitoring script
    cat > /usr/local/bin/health-check.sh << 'EOF'
    #!/bin/bash
-   
+
    # Check frontend
    if curl -f https://bouncehousekids.com > /dev/null 2>&1; then
        echo "Frontend: OK"
    else
        echo "Frontend: FAILED"
    fi
-   
+
    # Check backend
    if curl -f https://api.bouncehousekids.com/health > /dev/null 2>&1; then
        echo "Backend: OK"
@@ -419,9 +446,9 @@ This guide will walk you through deploying your Bounce House Kids application fr
        echo "Backend: FAILED"
    fi
    EOF
-   
+
    chmod +x /usr/local/bin/health-check.sh
-   
+
    # Run every 5 minutes
    crontab -e
    # Add: */5 * * * * /usr/local/bin/health-check.sh
@@ -430,10 +457,11 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ### Backup Strategy
 
 1. **Database Backups**
+
    ```bash
    # If using MongoDB Atlas - automatic backups included
    # If using self-hosted MongoDB:
-   
+
    cat > /usr/local/bin/backup-db.sh << 'EOF'
    #!/bin/bash
    DATE=$(date +%Y%m%d_%H%M%S)
@@ -441,7 +469,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
    # Upload to cloud storage
    aws s3 cp /backups/mongo_$DATE s3://your-backup-bucket/
    EOF
-   
+
    chmod +x /usr/local/bin/backup-db.sh
    # Run daily at 2 AM
    # 0 2 * * * /usr/local/bin/backup-db.sh
@@ -452,6 +480,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
 ## 🎯 Quick Start Summary
 
 ### For Cloud Deployment (Fastest):
+
 1. Create MongoDB Atlas database
 2. Deploy backend to Railway
 3. Deploy frontend to Vercel
@@ -460,6 +489,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
 6. Test deployment
 
 ### For Docker Deployment (Full Control):
+
 1. Provision VPS server
 2. Install Docker & Docker Compose
 3. Clone repository and configure
@@ -468,6 +498,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
 6. Point domain to server
 
 ### Timeline:
+
 - **Cloud Deployment**: 2-4 hours
 - **Docker Deployment**: 4-8 hours
 - **Domain Propagation**: 24-48 hours
@@ -498,6 +529,7 @@ This guide will walk you through deploying your Bounce House Kids application fr
    - Check build logs for specific errors
 
 ### Support Commands:
+
 ```bash
 # Check application logs
 docker-compose logs -f
@@ -519,6 +551,7 @@ openssl s_client -connect bouncehousekids.com:443
 ## 🎉 Deployment Complete!
 
 After following these steps, your Bounce House Kids application will be:
+
 - ✅ Live on your custom domain
 - ✅ Secured with SSL certificates
 - ✅ Connected to production database
@@ -526,11 +559,13 @@ After following these steps, your Bounce House Kids application will be:
 - ✅ Ready for customers
 
 **Your application is now production-ready and accessible at:**
+
 - Main site: https://bouncehousekids.com
 - API: https://api.bouncehousekids.com
 - Admin: https://bouncehousekids.com/admin
 
 Remember to:
+
 1. Test all functionality thoroughly
 2. Configure monitoring and backups
 3. Update payment processing to live mode

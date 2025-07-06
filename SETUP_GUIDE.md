@@ -19,12 +19,14 @@ This is a **complete, customizable bounce house rental platform** that includes:
 ## 🚀 Quick Start (5 Minutes)
 
 ### Prerequisites
+
 - Computer with Docker installed
 - Domain name (optional, can use localhost for testing)
 - Stripe account for payments
 - SendGrid account for emails (optional)
 
 ### 1. Download and Setup
+
 ```bash
 # Clone or download the project
 git clone <your-repository-url>
@@ -38,6 +40,7 @@ chmod +x deploy.sh
 ```
 
 ### 2. Configure Your Business
+
 Edit the `.env` file with your business information:
 
 ```env
@@ -64,18 +67,21 @@ JWT_SECRET=your-super-strong-random-secret-here
 ```
 
 ### 3. Deploy
+
 ```bash
 # Run the deployment script
 ./deploy.sh
 ```
 
 ### 4. Setup Sample Data
+
 ```bash
 # Add sample bounce houses and admin account
 docker-compose exec server npm run seed
 ```
 
 ### 5. Access Your Site
+
 - **Website**: http://localhost:3000
 - **Admin Login**: admin@bouncehousekids.com / password123
 
@@ -84,6 +90,7 @@ docker-compose exec server npm run seed
 ### White-Label/Multi-Tenant Setup
 
 This platform supports multiple businesses. Each business gets:
+
 - Custom subdomain (e.g., yourname.bouncehousekids.com)
 - Custom branding (colors, logo, fonts)
 - Separate inventory and customers
@@ -92,6 +99,7 @@ This platform supports multiple businesses. Each business gets:
 #### Adding a New Business
 
 1. **Via API** (recommended for automation):
+
 ```bash
 curl -X POST http://localhost:5000/api/companies \
   -H "Content-Type: application/json" \
@@ -125,6 +133,7 @@ curl -X POST http://localhost:5000/api/companies \
 ```
 
 2. **Direct Database** (for manual setup):
+
 - Connect to your MongoDB
 - Insert a new company record
 - Create a company admin user
@@ -134,6 +143,7 @@ curl -X POST http://localhost:5000/api/companies \
 Each business can customize:
 
 #### Colors and Fonts
+
 ```javascript
 // Available via API: GET /api/companies/branding
 {
@@ -148,6 +158,7 @@ Each business can customize:
 ```
 
 #### Business Settings
+
 ```javascript
 {
   "settings": {
@@ -167,6 +178,7 @@ Each business can customize:
 ## 🌐 Production Deployment
 
 ### Option 1: Docker (Recommended)
+
 The platform includes complete Docker configuration for easy deployment on any server.
 
 ```bash
@@ -181,11 +193,13 @@ cp .env.production .env
 ### Option 2: Cloud Platforms
 
 #### Vercel + Railway/Render
+
 - **Frontend**: Deploy to Vercel (automatic from Git)
 - **Backend**: Deploy to Railway or Render
 - **Database**: MongoDB Atlas
 
 #### AWS/Digital Ocean/Google Cloud
+
 - Use the included Docker configuration
 - Set up load balancer and SSL certificates
 - Configure domain routing
@@ -193,13 +207,17 @@ cp .env.production .env
 ### Domain Setup
 
 #### Single Business
+
 Point your domain to the server:
+
 ```
 yourbusiness.com → Your Server IP
 ```
 
 #### Multi-Tenant (Multiple Businesses)
+
 Configure wildcard DNS:
+
 ```
 *.yourbusiness.com → Your Server IP
 abc.yourbusiness.com → ABC Party Rentals
@@ -219,18 +237,22 @@ xyz.yourbusiness.com → XYZ Bounce Co
    - Events: `payment_intent.succeeded`, `payment_intent.payment_failed`
 
 ### Multi-Business Payments
+
 Each business can have separate Stripe accounts for independent payment processing.
 
 ## 📧 Email Setup
 
 ### SendGrid (Recommended)
+
 1. Create account at https://sendgrid.com
 2. Get API key
 3. Verify sender email
 4. Configure in `.env`
 
 ### Custom SMTP
+
 Configure any SMTP provider in the company settings:
+
 ```javascript
 {
   "emailConfig": {
@@ -256,12 +278,14 @@ Configure any SMTP provider in the company settings:
 ## 📊 Analytics and Monitoring
 
 ### Built-in Analytics
+
 - Booking statistics
 - Revenue tracking
 - Popular bounce houses
 - Customer insights
 
 ### External Integration
+
 - Google Analytics support
 - Sentry error tracking
 - Custom dashboard API
@@ -269,16 +293,19 @@ Configure any SMTP provider in the company settings:
 ## 🎯 Monetization Options
 
 ### 1. White-Label SaaS
+
 - Charge monthly fees per business
 - Tiered pricing based on features
 - Setup fees for new businesses
 
 ### 2. Commission Model
+
 - Take percentage of each booking
 - Integrated payment processing
 - Automatic commission calculation
 
 ### 3. One-Time Sale
+
 - Sell complete platform to businesses
 - Provide setup and customization
 - Ongoing support contracts
@@ -288,16 +315,19 @@ Configure any SMTP provider in the company settings:
 ### Adding New Features
 
 #### New Bounce House Fields
+
 1. Update the BounceHouse model
 2. Add to the admin interface
 3. Update the booking flow
 
 #### Custom Pricing Rules
+
 1. Extend the pricing calculation
 2. Add business rules
 3. Update the API
 
 #### New Payment Methods
+
 1. Integrate payment provider
 2. Update checkout flow
 3. Add to admin settings
@@ -305,16 +335,19 @@ Configure any SMTP provider in the company settings:
 ### UI Customization
 
 #### Themes
+
 Each business can have custom CSS:
+
 ```css
 :root {
-  --primary-color: var(--company-primary, #4F46E5);
-  --secondary-color: var(--company-secondary, #10B981);
+  --primary-color: var(--company-primary, #4f46e5);
+  --secondary-color: var(--company-secondary, #10b981);
   --font-family: var(--company-font, 'Inter, sans-serif');
 }
 ```
 
 #### Custom Components
+
 - Replace logo component
 - Custom footer
 - Business-specific pages
@@ -325,21 +358,25 @@ Each business can have custom CSS:
 ### Common Issues
 
 #### "Company not found" error
+
 - Check subdomain configuration
 - Verify database has company records
 - Check DNS settings
 
 #### Payment failures
+
 - Verify Stripe keys
 - Check webhook configuration
 - Review Stripe dashboard
 
 #### Email not sending
+
 - Verify SendGrid API key
 - Check sender verification
 - Review email templates
 
 ### Debug Mode
+
 ```bash
 # Enable debug logging
 docker-compose logs -f server
@@ -352,12 +389,15 @@ docker-compose logs mongodb
 ## 📞 Support
 
 ### Self-Help Resources
+
 - Check logs: `docker-compose logs`
 - Database access: MongoDB Compass
 - API testing: Postman collection included
 
 ### Professional Setup
+
 Need help setting up? We offer:
+
 - Complete deployment service
 - Custom branding setup
 - Payment integration
@@ -373,6 +413,7 @@ Contact: [your-support-email]
 ## 📈 Scaling Your Business
 
 ### Growth Features
+
 - Automated booking confirmations
 - Customer management system
 - Inventory tracking
@@ -380,6 +421,7 @@ Contact: [your-support-email]
 - Marketing tools integration
 
 ### Expansion Options
+
 - Multiple locations
 - Franchise opportunities
 - Partner network
