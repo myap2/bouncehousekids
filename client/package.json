@@ -28,6 +28,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:related": "react-scripts test --bail --findRelatedTests --watchAll=false",
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx} --quiet",
+    "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --quiet --fix",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

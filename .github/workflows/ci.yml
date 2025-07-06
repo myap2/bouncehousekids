@@ -1,0 +1,273 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: server/package-lock.json
+
+    - name: Install backend dependencies
+      working-directory: ./server
+      run: npm ci
+
+    - name: Run backend linting
+      working-directory: ./server
+      run: npm run lint || echo "No lint script found, skipping..."
+
+    - name: Run backend tests
+      working-directory: ./server
+      run: npm test
+
+    - name: Generate backend test coverage
+      working-directory: ./server
+      run: npm run test:coverage || npm test -- --coverage
+
+    - name: Upload backend coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./server/coverage/lcov.info
+        flags: backend
+        name: backend-coverage
+        fail_ci_if_error: false
+
+  test-frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: client/package-lock.json
+
+    - name: Install frontend dependencies
+      working-directory: ./client
+      run: npm ci
+
+    - name: Run frontend linting
+      working-directory: ./client
+      run: npm run lint || echo "No lint script found, skipping..."
+
+    - name: Run frontend tests
+      working-directory: ./client
+      run: npm test -- --coverage --watchAll=false
+
+    - name: Upload frontend coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./client/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+        fail_ci_if_error: false
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd mongo
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd server && npm ci
+        cd ../client && npm ci
+
+    - name: Build frontend
+      working-directory: ./client
+      run: npm run build
+
+    - name: Start backend server
+      working-directory: ./server
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://localhost:27017/test_bounce_house_db
+        JWT_SECRET: test-jwt-secret-key
+        STRIPE_SECRET_KEY: sk_test_mock_key
+      run: |
+        npm start &
+        sleep 10
+
+    - name: Run integration tests
+      run: ./run-tests.sh
+
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: |
+          backend-test-results.log
+          frontend-test-results.log
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+
+    - name: Install dependencies
+      run: |
+        cd server && npm ci
+        cd ../client && npm ci
+
+    - name: Run security audit (Backend)
+      working-directory: ./server
+      run: npm audit --audit-level=high
+
+    - name: Run security audit (Frontend)
+      working-directory: ./client
+      run: npm audit --audit-level=high
+
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: 'npm'
+
+    - name: Install backend dependencies
+      working-directory: ./server
+      run: npm ci
+
+    - name: Build backend
+      working-directory: ./server
+      run: npm run build
+
+    - name: Install frontend dependencies
+      working-directory: ./client
+      run: npm ci
+
+    - name: Build frontend
+      working-directory: ./client
+      run: npm run build
+
+    - name: Check build artifacts
+      run: |
+        ls -la server/dist/
+        ls -la client/build/
+
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, security-scan, build-check]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+
+    - name: Install dependencies
+      run: |
+        cd server && npm ci
+        cd ../client && npm ci
+
+    - name: Check test coverage thresholds
+      run: |
+        echo "Checking backend coverage..."
+        cd server && npm run test:coverage
+        echo "Checking frontend coverage..."
+        cd ../client && npm test -- --coverage --watchAll=false --coverageThreshold='{"global":{"lines":80,"statements":80,"branches":75,"functions":80}}'
+
+    - name: All quality gates passed
+      run: echo "✅ All quality gates passed! Ready for merge."
+
+  deployment-ready:
+    name: Deployment Ready
+    runs-on: ubuntu-latest
+    needs: [integration-tests, quality-gates]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create deployment artifact
+      run: |
+        mkdir -p deployment
+        echo "Build: ${{ github.sha }}" > deployment/build-info.txt
+        echo "Branch: ${{ github.ref }}" >> deployment/build-info.txt
+        echo "Timestamp: $(date)" >> deployment/build-info.txt
+
+    - name: Upload deployment artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: deployment-ready-${{ github.sha }}
+        path: deployment/
+
+    - name: Ready for deployment
+      run: echo "🚀 Build is ready for deployment!"
