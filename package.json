@@ -1,0 +1,81 @@
+{
+  "name": "bounce-house-rental-system",
+  "version": "1.0.0",
+  "description": "Multi-tenant bounce house rental platform with comprehensive testing",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "test": "./run-tests.sh",
+    "test:backend": "cd server && npm test",
+    "test:frontend": "cd client && npm test -- --watchAll=false",
+    "test:coverage": "npm run test:backend -- --coverage && npm run test:frontend -- --coverage",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd server && npm run lint",
+    "lint:frontend": "cd client && npm run lint",
+    "lint:fix": "npm run lint:backend -- --fix && npm run lint:frontend -- --fix",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd server && npm run build",
+    "build:frontend": "cd client && npm run build",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd server && npm run dev",
+    "dev:frontend": "cd client && npm start",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged",
+    "validate": "npm run lint && npm run test && npm run build",
+    "clean": "rm -rf node_modules server/node_modules client/node_modules server/dist client/build coverage",
+    "security-audit": "npm audit && cd server && npm audit && cd ../client && npm audit"
+  },
+  "lint-staged": {
+    "server/**/*.{js,ts}": [
+      "cd server && npm run lint:fix",
+      "cd server && npm run test:related"
+    ],
+    "client/**/*.{js,jsx,ts,tsx}": [
+      "cd client && npm run lint:fix",
+      "cd client && npm run test:related"
+    ],
+    "*.{js,ts,jsx,tsx,json,md}": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run validate",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "concurrently": "^8.2.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/bounce-house-rental-system.git"
+  },
+  "keywords": [
+    "bounce-house",
+    "rental",
+    "multi-tenant",
+    "react",
+    "node.js",
+    "express",
+    "mongodb",
+    "stripe",
+    "testing"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT"
+}

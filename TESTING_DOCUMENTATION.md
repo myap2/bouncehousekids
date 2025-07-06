@@ -220,7 +220,101 @@ The test suite is designed to run in CI/CD pipelines with:
 - Coverage reporting
 - Exit code handling for deployment gates
 
-## 📊 Test Coverage
+## �️ Merge Protection & CI/CD
+
+### ⚠️ CRITICAL: Tests Must Pass Before Merging
+
+This project enforces **mandatory test passing** before any code can be merged into the main branch. **No exceptions.**
+
+### Multi-Layer Protection System
+
+1. **Pre-commit Hooks**: Run linting and related tests before each commit
+2. **Pre-push Hooks**: Run full validation suite before pushing to remote
+3. **GitHub Actions CI/CD**: Comprehensive testing on every pull request
+4. **Branch Protection Rules**: Block merging if any tests fail
+5. **Quality Gates**: Enforce coverage thresholds and security scans
+
+### 🚀 Quick Setup
+
+```bash
+# Install all dependencies and set up protection
+./setup-merge-protection.sh
+
+# Check current protection status
+./check-protection-status.sh
+```
+
+### 📋 What Gets Tested Before Merge
+
+Every pull request must pass:
+- ✅ **Backend Tests**: All controller, service, and integration tests (98+ test cases)
+- ✅ **Frontend Tests**: All React component and utility tests  
+- ✅ **Code Coverage**: Minimum 80% coverage enforced
+- ✅ **Linting**: ESLint and Prettier validation
+- ✅ **Security Audit**: No high-severity vulnerabilities
+- ✅ **Build Verification**: Both frontend and backend must build successfully
+- ✅ **Integration Tests**: End-to-end functionality validation
+
+### 🔧 Developer Workflow
+
+```bash
+# 1. Create feature branch
+git checkout -b feature/my-new-feature
+
+# 2. Make changes and write tests
+# ... develop your feature ...
+
+# 3. Commit (pre-commit hooks run automatically)
+git add .
+git commit -m "feat: add new feature"
+# ✅ Linting and related tests run
+
+# 4. Push (pre-push hooks run automatically)
+git push origin feature/my-new-feature
+# ✅ Full test suite runs
+
+# 5. Create Pull Request
+# ✅ GitHub Actions CI/CD runs all tests
+
+# 6. Merge only when all tests pass
+# ✅ Branch protection prevents merge if tests fail
+```
+
+### 📊 Coverage Requirements
+
+- **Backend**: 80% lines, 80% statements, 75% branches, 80% functions
+- **Frontend**: 80% lines, 80% statements, 75% branches, 80% functions
+
+### 🆘 If Tests Fail
+
+**Local failures:**
+```bash
+# Fix the issues
+npm run lint:fix
+npm test
+
+# Commit the fixes
+git add .
+git commit -m "fix: resolve test failures"
+```
+
+**CI failures:**
+```bash
+# Check GitHub Actions logs
+# Fix issues locally
+npm run validate
+
+# Push fixes
+git push
+```
+
+### 📖 Additional Resources
+
+- **Setup Guide**: `MERGE_PROTECTION_SETUP.md`
+- **GitHub Actions**: `.github/workflows/ci.yml`
+- **Pre-commit Configuration**: `.husky/` directory
+
+## �📊 Test Coverage
 
 ### Backend Coverage Targets
 - **Controllers**: >90% line coverage
