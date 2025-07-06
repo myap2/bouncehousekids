@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import multer from 'multer';
 import path from 'path';
+
+// Import upload service
+import { createUploadMiddleware, getFileUrl, uploadToCloudinary, getStorageInfo } from './services/uploadService';
 
 // Import routes
 import userRoutes from './routes/userRoutes';
@@ -22,30 +24,47 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Multer setup for file uploads ---
-const uploadDir = path.join(__dirname, '../../uploads');
-const storage = multer.diskStorage({
-  destination: (req: express.Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-    cb(null, uploadDir);
-  },
-  filename: (req: express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  }
-});
-const upload = multer({ storage });
+// Create upload middleware
+const upload = createUploadMiddleware();
 
-// Ensure /uploads is served as static files
-app.use('/uploads', express.static(uploadDir));
+// Serve static files (only for local storage)
+if ((process.env.UPLOAD_STORAGE_TYPE || 'local') === 'local') {
+  const uploadDir = path.join(__dirname, '../../uploads');
+  app.use('/uploads', express.static(uploadDir));
+}
 
 // --- Upload endpoint ---
-app.post('/api/upload', upload.single('image'), (req: express.Request, res: express.Response) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
+app.post('/api/upload', upload.single('image'), async (req: express.Request, res: express.Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    let fileUrl: string;
+    const storageType = process.env.UPLOAD_STORAGE_TYPE || 'local';
+
+    if (storageType === 'cloudinary') {
+      // Handle Cloudinary upload
+      fileUrl = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+    } else if (storageType === 's3') {
+      // S3 URL is handled by multer-s3
+      fileUrl = (req.file as any).location;
+    } else {
+      // Local storage
+      fileUrl = getFileUrl(req.file.filename);
+    }
+
+    res.json({ url: fileUrl });
+  } catch (error: unknown) {
+    console.error('Upload error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+    res.status(500).json({ message: errorMessage });
   }
-  // Return the URL to access the uploaded file
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ url: fileUrl });
+});
+
+// Storage info endpoint (for debugging)
+app.get('/api/storage-info', (req: express.Request, res: express.Response) => {
+  res.json(getStorageInfo());
 });
 
 // Database connection
@@ -76,4 +95,5 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Upload storage: ${getStorageInfo().type}`);
 }); 

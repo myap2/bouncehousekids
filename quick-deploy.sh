@@ -87,6 +87,28 @@ collect_config() {
     # Domain configuration
     prompt_input "Enter your domain name (e.g., bouncehousekids.com)" DOMAIN_NAME
     
+    # Storage configuration
+    print_info "File Upload Storage Configuration"
+    echo "Options:"
+    echo "1. cloudinary (Recommended - Free 25GB, image optimization, CDN)"
+    echo "2. s3 (AWS S3 - Cheapest, requires AWS setup)"
+    echo "3. local (Development only - NOT for production)"
+    prompt_input "Choose storage type (cloudinary/s3/local)" STORAGE_TYPE "cloudinary"
+    
+    # Storage-specific configuration
+    if [ "$STORAGE_TYPE" = "cloudinary" ]; then
+        print_info "Cloudinary Configuration (Get from https://cloudinary.com/console)"
+        prompt_input "Cloudinary Cloud Name" CLOUDINARY_CLOUD_NAME
+        prompt_secret "Cloudinary API Key" CLOUDINARY_API_KEY
+        prompt_secret "Cloudinary API Secret" CLOUDINARY_API_SECRET
+    elif [ "$STORAGE_TYPE" = "s3" ]; then
+        print_info "AWS S3 Configuration"
+        prompt_input "AWS S3 Bucket Name" AWS_S3_BUCKET
+        prompt_input "AWS Region" AWS_REGION "us-east-1"
+        prompt_secret "AWS Access Key ID" AWS_ACCESS_KEY_ID
+        prompt_secret "AWS Secret Access Key" AWS_SECRET_ACCESS_KEY
+    fi
+    
     # Database configuration
     print_info "MongoDB Atlas connection string (from MongoDB Atlas dashboard)"
     prompt_secret "MongoDB URI" MONGODB_URI
@@ -163,6 +185,22 @@ deploy_backend() {
     railway variables set SENDGRID_API_KEY="$SENDGRID_API_KEY"
     railway variables set SENDGRID_FROM_EMAIL="$SENDGRID_FROM_EMAIL"
     railway variables set CORS_ORIGIN="https://$DOMAIN_NAME"
+    
+    # Set storage-specific environment variables
+    railway variables set UPLOAD_STORAGE_TYPE="$STORAGE_TYPE"
+    
+    if [ "$STORAGE_TYPE" = "cloudinary" ]; then
+        print_info "Setting Cloudinary configuration..."
+        railway variables set CLOUDINARY_CLOUD_NAME="$CLOUDINARY_CLOUD_NAME"
+        railway variables set CLOUDINARY_API_KEY="$CLOUDINARY_API_KEY"
+        railway variables set CLOUDINARY_API_SECRET="$CLOUDINARY_API_SECRET"
+    elif [ "$STORAGE_TYPE" = "s3" ]; then
+        print_info "Setting AWS S3 configuration..."
+        railway variables set AWS_S3_BUCKET="$AWS_S3_BUCKET"
+        railway variables set AWS_REGION="$AWS_REGION"
+        railway variables set AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
+        railway variables set AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
+    fi
     
     # Deploy
     print_info "Deploying backend..."
