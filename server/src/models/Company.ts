@@ -11,6 +11,10 @@ export interface ICompany extends Document {
     city: string;
     state: string;
     zipCode: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
   };
   branding: {
     logo?: string;
@@ -78,7 +82,11 @@ const CompanySchema = new Schema({
     street: { type: String, required: true },
     city: { type: String, required: true },
     state: { type: String, required: true },
-    zipCode: { type: String, required: true }
+    zipCode: { type: String, required: true },
+    coordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number }
+    }
   },
   branding: {
     logo: { type: String },
@@ -136,9 +144,13 @@ const CompanySchema = new Schema({
   timestamps: true
 });
 
-// Add indexes
+// Add indexes for location-based queries
 CompanySchema.index({ subdomain: 1 });
 CompanySchema.index({ domain: 1 });
 CompanySchema.index({ isActive: 1 });
+CompanySchema.index({ 'address.zipCode': 1 });
+CompanySchema.index({ 'address.city': 1 });
+CompanySchema.index({ 'address.state': 1 });
+CompanySchema.index({ 'address.coordinates': '2dsphere' }); // For geospatial queries
 
 export default mongoose.model<ICompany>('Company', CompanySchema);

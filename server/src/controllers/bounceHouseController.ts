@@ -1,8 +1,23 @@
 import { Request, Response } from 'express';
 import BounceHouse from '../models/BounceHouse';
+import Company from '../models/Company';
+import { 
+  getZipCodeCoordinates, 
+  geocodeAddress, 
+  filterCompaniesByDeliveryRadius,
+  calculateDistancesToCompanies,
+  normalizeZipCode,
+  Coordinates 
+} from '../services/locationService';
 
 interface AuthRequest extends Request {
   user?: any;
+}
+
+interface BounceHouseWithDistance {
+  [key: string]: any;
+  distance?: number | null;
+  withinDeliveryRadius?: boolean | null;
 }
 
 export const createBounceHouse = async (req: AuthRequest, res: Response) => {
@@ -47,11 +62,21 @@ export const getBounceHouses = async (req: Request, res: Response) => {
       maxPrice,
       startDate,
       endDate,
-      company
+      company,
+      // Location-based filters
+      zipCode,
+      city,
+      state,
+      latitude,
+      longitude,
+      radius,
+      deliveryOnly,
+      sortBy
     } = req.query;
 
     const query: any = { isActive: true };
 
+    // Basic filters
     if (theme) {
       query.theme = theme;
     }
@@ -68,6 +93,7 @@ export const getBounceHouses = async (req: Request, res: Response) => {
       query.company = company;
     }
 
+    // Date availability filter
     if (startDate && endDate) {
       query.availability = {
         $not: {
@@ -79,12 +105,133 @@ export const getBounceHouses = async (req: Request, res: Response) => {
       };
     }
 
-    const bounceHouses = await BounceHouse.find(query)
-      .populate('company', 'name location')
+    // Location-based filtering
+    let customerCoordinates: Coordinates | null = null;
+    
+    // Get customer coordinates from different sources
+    if (latitude && longitude) {
+      customerCoordinates = {
+        latitude: parseFloat(latitude as string),
+        longitude: parseFloat(longitude as string)
+      };
+    } else if (zipCode) {
+      customerCoordinates = await getZipCodeCoordinates(normalizeZipCode(zipCode as string));
+    } else if (city && state) {
+      const address = `${city}, ${state}`;
+      customerCoordinates = await geocodeAddress(address);
+    }
+
+    // Basic bounce house query
+    let bounceHouses = await BounceHouse.find(query)
+      .populate('company', 'name location address settings')
       .sort({ rating: -1 });
 
-    res.json(bounceHouses);
+    let bounceHousesWithDistance: BounceHouseWithDistance[] = [];
+
+    // Apply location-based filtering if coordinates available
+    if (customerCoordinates) {
+      // Get all companies with coordinates
+      const companies = await Company.find({ isActive: true });
+      
+      let filteredCompanies;
+      
+      if (deliveryOnly === 'true') {
+        // Only show companies that deliver to customer location
+        filteredCompanies = filterCompaniesByDeliveryRadius(customerCoordinates, companies);
+      } else if (radius) {
+        // Show companies within specified radius
+        const radiusMiles = parseFloat(radius as string);
+        const distanceResults = calculateDistancesToCompanies(customerCoordinates, companies);
+        filteredCompanies = distanceResults
+          .filter(result => result.distance <= radiusMiles)
+          .map(result => ({
+            ...result.company.toObject(),
+            distance: result.distance
+          }));
+      } else {
+        // Show all companies with distance info
+        const distanceResults = calculateDistancesToCompanies(customerCoordinates, companies);
+        filteredCompanies = distanceResults.map(result => ({
+          ...result.company.toObject(),
+          distance: result.distance
+        }));
+      }
+
+      // Filter bounce houses to only include those from filtered companies
+      const companyIds = filteredCompanies.map(company => company._id.toString());
+      bounceHouses = bounceHouses.filter(bounceHouse => 
+        companyIds.includes(bounceHouse.company._id.toString())
+      );
+
+      // Add distance info to bounce houses
+      bounceHousesWithDistance = bounceHouses.map(bounceHouse => {
+        const company = filteredCompanies.find(c => 
+          c._id.toString() === bounceHouse.company._id.toString()
+        );
+        return {
+          ...bounceHouse.toObject(),
+          distance: company?.distance || null,
+          withinDeliveryRadius: company ? 
+            (company.distance <= (company.settings?.deliveryRadius || 25)) : null
+        };
+      });
+
+      // Sort by distance if requested
+      if (sortBy === 'distance') {
+        bounceHousesWithDistance.sort((a, b) => {
+          if (a.distance === null) return 1;
+          if (b.distance === null) return -1;
+          return (a.distance || 0) - (b.distance || 0);
+        });
+      }
+    } else {
+      // No location filtering, convert to proper format
+      bounceHousesWithDistance = bounceHouses.map(bounceHouse => bounceHouse.toObject());
+    }
+
+    // Add location-based filters to query for non-coordinate searches
+    if (zipCode && !customerCoordinates) {
+      const companyQuery: any = { isActive: true };
+      companyQuery['address.zipCode'] = normalizeZipCode(zipCode as string);
+      const companies = await Company.find(companyQuery);
+      const companyIds = companies.map(c => c._id);
+      bounceHousesWithDistance = bounceHousesWithDistance.filter(bounceHouse => 
+        companyIds.some(id => id.toString() === bounceHouse.company._id.toString())
+      );
+    }
+
+    if (city && !customerCoordinates) {
+      const companyQuery: any = { isActive: true };
+      companyQuery['address.city'] = new RegExp(city as string, 'i');
+      const companies = await Company.find(companyQuery);
+      const companyIds = companies.map(c => c._id);
+      bounceHousesWithDistance = bounceHousesWithDistance.filter(bounceHouse => 
+        companyIds.some(id => id.toString() === bounceHouse.company._id.toString())
+      );
+    }
+
+    if (state && !customerCoordinates) {
+      const companyQuery: any = { isActive: true };
+      companyQuery['address.state'] = new RegExp(state as string, 'i');
+      const companies = await Company.find(companyQuery);
+      const companyIds = companies.map(c => c._id);
+      bounceHousesWithDistance = bounceHousesWithDistance.filter(bounceHouse => 
+        companyIds.some(id => id.toString() === bounceHouse.company._id.toString())
+      );
+    }
+
+    res.json({
+      bounceHouses: bounceHousesWithDistance,
+      total: bounceHousesWithDistance.length,
+      searchLocation: customerCoordinates ? {
+        coordinates: customerCoordinates,
+        searchType: latitude && longitude ? 'coordinates' : 
+                    zipCode ? 'zipCode' : 
+                    city && state ? 'cityState' : 'none'
+      } : null
+    });
   } catch (error) {
+    console.error('Error fetching bounce houses:', error);
     res.status(500).json({ message: 'Error fetching bounce houses' });
   }
 };
@@ -92,7 +239,7 @@ export const getBounceHouses = async (req: Request, res: Response) => {
 export const getBounceHouseById = async (req: Request, res: Response) => {
   try {
     const bounceHouse = await BounceHouse.findById(req.params.id)
-      .populate('company', 'name location contact');
+      .populate('company', 'name location contact address settings');
     
     if (!bounceHouse) {
       return res.status(404).json({ message: 'Bounce house not found' });
@@ -252,5 +399,90 @@ export const getMyCompanyBounceHouses = async (req: AuthRequest, res: Response) 
     res.json(bounceHouses);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching company bounce houses' });
+  }
+};
+
+// Search bounce houses by location
+export const searchBounceHousesByLocation = async (req: Request, res: Response) => {
+  try {
+    const { location, radius = 25, deliveryOnly = false } = req.query;
+    
+    if (!location) {
+      return res.status(400).json({ message: 'Location parameter is required' });
+    }
+
+    // Try to get coordinates from location
+    let customerCoordinates: Coordinates | null = null;
+    
+    // Check if location is a zip code (5 digits)
+    if (/^\d{5}$/.test(location as string)) {
+      customerCoordinates = await getZipCodeCoordinates(location as string);
+    } else {
+      // Try geocoding the location
+      customerCoordinates = await geocodeAddress(location as string);
+    }
+
+    if (!customerCoordinates) {
+      return res.status(400).json({ message: 'Unable to find coordinates for the provided location' });
+    }
+
+    // Get all companies
+    const companies = await Company.find({ isActive: true });
+    
+    // Filter companies based on location criteria
+    let filteredCompanies;
+    if (deliveryOnly === 'true') {
+      filteredCompanies = filterCompaniesByDeliveryRadius(customerCoordinates, companies);
+    } else {
+      const radiusMiles = parseFloat(radius as string);
+      const distanceResults = calculateDistancesToCompanies(customerCoordinates, companies);
+      filteredCompanies = distanceResults
+        .filter(result => result.distance <= radiusMiles)
+        .map(result => ({
+          ...result.company.toObject(),
+          distance: result.distance
+        }));
+    }
+
+    // Get bounce houses from filtered companies
+    const companyIds = filteredCompanies.map(company => company._id);
+    const bounceHouses = await BounceHouse.find({ 
+      company: { $in: companyIds },
+      isActive: true 
+    }).populate('company', 'name address settings');
+
+    // Add distance info to bounce houses
+    const bounceHousesWithDistance = bounceHouses.map(bounceHouse => {
+      const company = filteredCompanies.find(c => 
+        c._id.toString() === bounceHouse.company._id.toString()
+      );
+      return {
+        ...bounceHouse.toObject(),
+        distance: company?.distance || null,
+        withinDeliveryRadius: company ? 
+          (company.distance <= (company.settings?.deliveryRadius || 25)) : null
+      };
+    });
+
+    // Sort by distance
+    bounceHousesWithDistance.sort((a, b) => {
+      if (a.distance === null) return 1;
+      if (b.distance === null) return -1;
+      return a.distance - b.distance;
+    });
+
+    res.json({
+      bounceHouses: bounceHousesWithDistance,
+      total: bounceHousesWithDistance.length,
+      searchLocation: {
+        coordinates: customerCoordinates,
+        location: location as string,
+        radius: parseFloat(radius as string),
+        deliveryOnly: deliveryOnly === 'true'
+      }
+    });
+  } catch (error) {
+    console.error('Error searching bounce houses by location:', error);
+    res.status(500).json({ message: 'Error searching bounce houses by location' });
   }
 }; 

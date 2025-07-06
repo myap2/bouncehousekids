@@ -6,7 +6,8 @@ import {
   updateBounceHouse,
   deleteBounceHouse,
   addReview,
-  getMyCompanyBounceHouses
+  getMyCompanyBounceHouses,
+  searchBounceHousesByLocation
 } from '../controllers/bounceHouseController';
 import { auth, adminAuth, bounceHouseAuth } from '../middleware/auth';
 
@@ -14,6 +15,7 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getBounceHouses);
+router.get('/search/location', searchBounceHousesByLocation);
 router.get('/:id', getBounceHouseById);
 
 // Protected routes
