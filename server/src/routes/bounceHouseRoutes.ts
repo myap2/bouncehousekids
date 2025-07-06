@@ -5,9 +5,10 @@ import {
   getBounceHouseById,
   updateBounceHouse,
   deleteBounceHouse,
-  addReview
+  addReview,
+  getMyCompanyBounceHouses
 } from '../controllers/bounceHouseController';
-import { auth, adminAuth } from '../middleware/auth';
+import { auth, adminAuth, bounceHouseAuth } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -18,9 +19,12 @@ router.get('/:id', getBounceHouseById);
 // Protected routes
 router.post('/:id/reviews', auth, addReview);
 
-// Admin routes
-router.post('/', adminAuth, createBounceHouse);
-router.patch('/:id', adminAuth, updateBounceHouse);
-router.delete('/:id', adminAuth, deleteBounceHouse);
+// Company Admin routes
+router.get('/my-company', bounceHouseAuth, getMyCompanyBounceHouses);
+
+// Admin and Company Admin routes
+router.post('/', bounceHouseAuth, createBounceHouse);
+router.patch('/:id', bounceHouseAuth, updateBounceHouse);
+router.delete('/:id', bounceHouseAuth, deleteBounceHouse);
 
 export default router; 
