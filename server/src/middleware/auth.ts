@@ -39,4 +39,28 @@ export const adminAuth = async (req: AuthRequest, res: Response, next: NextFunct
   } catch (error) {
     res.status(401).json({ message: 'Please authenticate.' });
   }
+};
+
+// New middleware for bounce house management - allows both admin and company-admin
+export const bounceHouseAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    await auth(req, res, () => {
+      if (req.user.role !== 'admin' && req.user.role !== 'company-admin') {
+        return res.status(403).json({ 
+          message: 'Access denied. Only administrators and company administrators can manage bounce houses.' 
+        });
+      }
+      
+      // Company admins must have a company associated
+      if (req.user.role === 'company-admin' && !req.user.company) {
+        return res.status(403).json({ 
+          message: 'Access denied. Company administrators must be associated with a company.' 
+        });
+      }
+      
+      next();
+    });
+  } catch (error) {
+    res.status(401).json({ message: 'Please authenticate.' });
+  }
 }; 

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Waiver from '../models/Waiver';
 import Company from '../models/Company';
+import CompanyWaiverTemplate from '../models/CompanyWaiverTemplate';
 
 // Get client IP address
 const getClientIP = (req: Request): string => {
@@ -10,7 +11,30 @@ const getClientIP = (req: Request): string => {
          '127.0.0.1';
 };
 
-// Default waiver text template
+// Get company's waiver template
+const getCompanyWaiverTemplate = async (companyId: string, templateId?: string) => {
+  let template;
+  
+  if (templateId) {
+    // Get specific template
+    template = await CompanyWaiverTemplate.findOne({
+      _id: templateId,
+      company: companyId,
+      isActive: true
+    });
+  } else {
+    // Get default template
+    template = await CompanyWaiverTemplate.findOne({
+      company: companyId,
+      isDefault: true,
+      isActive: true
+    });
+  }
+  
+  return template;
+};
+
+// Default waiver text template (fallback)
 const getDefaultWaiverText = (companyName: string): string => {
   return `
 RELEASE AND WAIVER OF LIABILITY, ASSUMPTION OF RISK, AND INDEMNITY AGREEMENT
@@ -60,7 +84,9 @@ export const createWaiver = async (req: Request, res: Response) => {
       agreedTerms,
       booking,
       witnessName,
-      witnessSignature
+      witnessSignature,
+      templateId, // Optional: specify which template to use
+      customFieldValues // Values for any custom fields
     } = req.body;
 
     // Validate required fields
@@ -74,17 +100,56 @@ export const createWaiver = async (req: Request, res: Response) => {
 
     const isMinor = participantAge < 18;
 
-    // Validate parent/guardian info for minors
-    if (isMinor && (!parentGuardianName || !parentGuardianEmail)) {
+    // Get company's waiver template
+    const waiverTemplate = await getCompanyWaiverTemplate(req.company._id, templateId);
+    
+    let waiverText: string;
+    let templateSettings;
+    
+    if (waiverTemplate) {
+      waiverText = waiverTemplate.waiverText || '';
+      templateSettings = waiverTemplate.settings;
+      
+      // If it's a PDF/document template, include reference to the document
+      if (waiverTemplate.documentType !== 'text' && waiverTemplate.documentUrl) {
+        waiverText += `\n\nWaiver Document: ${waiverTemplate.documentUrl}`;
+      }
+    } else {
+      // Fallback to default text template
+      waiverText = getDefaultWaiverText(req.company.name);
+      templateSettings = {
+        requiresWitness: false,
+        requiresParentSignature: true,
+        validityDays: 365,
+        requiresMedicalInfo: true,
+        requiresEmergencyContact: true,
+        allowsOnlineSignature: true,
+        requiresInPersonSignature: false
+      };
+    }
+
+    // Validate based on template settings
+    if (isMinor && templateSettings.requiresParentSignature && (!parentGuardianName || !parentGuardianEmail)) {
       return res.status(400).json({ message: 'Parent/guardian information required for minors' });
     }
 
+    if (templateSettings.requiresWitness && !witnessName) {
+      return res.status(400).json({ message: 'Witness signature required' });
+    }
+
+    if (templateSettings.requiresMedicalInfo && !medicalConditions) {
+      return res.status(400).json({ message: 'Medical information is required' });
+    }
+
     // Check if user already has a valid waiver
+    const validityDays = templateSettings.validityDays || 365;
+    const validFrom = new Date(Date.now() - validityDays * 24 * 60 * 60 * 1000);
+    
     const existingWaiver = await Waiver.findOne({
       user: req.user._id,
       company: req.company._id,
       participantName,
-      signedAt: { $gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) } // Within last year
+      signedAt: { $gte: validFrom }
     });
 
     if (existingWaiver) {
@@ -107,14 +172,16 @@ export const createWaiver = async (req: Request, res: Response) => {
       emergencyContactPhone,
       medicalConditions,
       allergies,
-      waiverText: getDefaultWaiverText(req.company.name),
+      waiverText,
       agreedTerms,
       signature,
       isMinor,
       ipAddress: getClientIP(req),
       userAgent: req.headers['user-agent'] || '',
       witnessName,
-      witnessSignature
+      witnessSignature,
+      waiverTemplate: waiverTemplate?._id, // Store reference to the template used
+      customFieldValues // Store any custom field values
     });
 
     await waiver.save();
@@ -125,12 +192,14 @@ export const createWaiver = async (req: Request, res: Response) => {
         _id: waiver._id,
         participantName: waiver.participantName,
         signedAt: waiver.signedAt,
-        isMinor: waiver.isMinor
+        isMinor: waiver.isMinor,
+        templateUsed: waiverTemplate?.name || 'Default Template'
       }
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating waiver:', error);
-    res.status(400).json({ message: 'Error creating waiver' });
+    const errorMessage = error instanceof Error ? error.message : 'Error creating waiver';
+    res.status(400).json({ message: errorMessage });
   }
 };
 
@@ -236,19 +305,53 @@ export const getWaiverTemplate = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Company context required' });
     }
 
-    const waiverText = getDefaultWaiverText(req.company.name);
-
-    res.json({
-      companyName: req.company.name,
-      waiverText,
-      settings: {
-        requiresWitness: req.company.settings?.requiresWitness || false,
-        waiverValidityDays: 365,
-        minorRequiresParent: true
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching waiver template' });
+    const { templateId } = req.query;
+    
+    // Get company's waiver template
+    const waiverTemplate = await getCompanyWaiverTemplate(req.company._id, templateId as string);
+    
+    if (waiverTemplate) {
+      res.json({
+        template: {
+          _id: waiverTemplate._id,
+          name: waiverTemplate.name,
+          description: waiverTemplate.description,
+          waiverText: waiverTemplate.waiverText,
+          documentUrl: waiverTemplate.documentUrl,
+          documentType: waiverTemplate.documentType,
+          customFields: waiverTemplate.customFields,
+          settings: waiverTemplate.settings
+        },
+        companyName: req.company.name,
+        isDefault: waiverTemplate.isDefault
+      });
+    } else {
+      // Return default template
+      const waiverText = getDefaultWaiverText(req.company.name);
+      res.json({
+        template: {
+          name: 'Default Liability Waiver',
+          waiverText,
+          documentType: 'text',
+          customFields: [],
+          settings: {
+            requiresWitness: false,
+            requiresParentSignature: true,
+            validityDays: 365,
+            requiresMedicalInfo: true,
+            requiresEmergencyContact: true,
+            allowsOnlineSignature: true,
+            requiresInPersonSignature: false
+          }
+        },
+        companyName: req.company.name,
+        isDefault: true
+      });
+    }
+  } catch (error: unknown) {
+    console.error('Error fetching waiver template:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Error fetching waiver template';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
