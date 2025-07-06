@@ -110,4 +110,9 @@ uploads/
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Ignore lock files inside node_modules
+node_modules/.package-lock.json
+*/node_modules/.package-lock.json
+**/node_modules/.package-lock.json 
