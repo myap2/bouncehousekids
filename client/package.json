@@ -2,6 +2,7 @@
   "name": "bouncehousekids-client",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.5",
     "@stripe/stripe-js": "^2.1.7",

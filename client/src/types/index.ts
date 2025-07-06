@@ -1,9 +1,10 @@
 export interface User {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility with some server responses
   email: string;
   firstName: string;
   lastName: string;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'admin' | 'company-admin';
   phone: string;
   address: {
     street: string;
@@ -11,17 +12,19 @@ export interface User {
     state: string;
     zipCode: string;
   };
-  paymentMethods: {
+  paymentMethods?: {
     type: string;
     last4: string;
     expiryMonth: number;
     expiryYear: number;
     isDefault: boolean;
   }[];
+  company?: string | { _id: string; name?: string; subdomain?: string };
 }
 
 export interface BounceHouse {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
   name: string;
   description: string;
   theme: string;
@@ -55,10 +58,12 @@ export interface BounceHouse {
     date: string;
   }[];
   isActive: boolean;
+  company?: string;
 }
 
 export interface Booking {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
   user: string;
   bounceHouse: BounceHouse;
   startDate: string;

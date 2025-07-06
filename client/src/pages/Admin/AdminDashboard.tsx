@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { companyAPI } from '../../services/api';
 
 interface Company {
   _id: string;
@@ -14,6 +14,7 @@ interface Company {
 
 interface User {
   _id: string;
+  id?: string; // For compatibility
   email: string;
   firstName: string;
   lastName: string;
@@ -37,6 +38,7 @@ const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreateCompany, setShowCreateCompany] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // New company form
   const [newCompany, setNewCompany] = useState({
@@ -65,15 +67,23 @@ const AdminDashboard: React.FC = () => {
   });
 
   useEffect(() => {
+    // Check if user is authenticated and has admin role
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Authentication required. Please log in.');
+      return;
+    }
+    
     loadData();
   }, []);
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [companiesRes, usersRes] = await Promise.all([
-        axios.get('/api/companies'),
-        axios.get('/api/users')
+        companyAPI.getAll(),
+        api.get('/users')
       ]);
       
       setCompanies(companiesRes.data);
@@ -91,16 +101,24 @@ const AdminDashboard: React.FC = () => {
         totalBookings: 0, // TODO: Add booking count
         totalRevenue: 0   // TODO: Add revenue calculation
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading admin data:', error);
+      if (error.response?.status === 401) {
+        setError('Authentication failed. Please log in again.');
+      } else if (error.response?.status === 403) {
+        setError('Access denied. Admin privileges required.');
+      } else {
+        setError('Error loading data. Please try again.');
+      }
     }
     setLoading(false);
   };
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
-      await axios.post('/api/companies', newCompany);
+      await companyAPI.create(newCompany);
       setShowCreateCompany(false);
       setNewCompany({
         name: '',
@@ -115,28 +133,51 @@ const AdminDashboard: React.FC = () => {
       loadData(); // Refresh the list
       alert('Company created successfully!');
     } catch (error: any) {
-      alert('Error creating company: ' + (error.response?.data?.message || error.message));
+      console.error('Error creating company:', error);
+      if (error.response?.status === 401) {
+        setError('Authentication failed. Please log in again.');
+      } else if (error.response?.status === 403) {
+        setError('Access denied. Admin privileges required.');
+      } else {
+        setError('Error creating company: ' + (error.response?.data?.message || error.message));
+      }
     }
   };
 
   const handleDeleteCompany = async (companyId: string, companyName: string) => {
     if (window.confirm(`Are you sure you want to delete "${companyName}"?`)) {
+      setError(null);
       try {
-        await axios.delete(`/api/companies/${companyId}`);
+        await companyAPI.delete(companyId);
         loadData();
         alert('Company deleted successfully!');
-      } catch (error) {
-        alert('Error deleting company');
+      } catch (error: any) {
+        console.error('Error deleting company:', error);
+        if (error.response?.status === 401) {
+          setError('Authentication failed. Please log in again.');
+        } else if (error.response?.status === 403) {
+          setError('Access denied. Admin privileges required.');
+        } else {
+          setError('Error deleting company. Please try again.');
+        }
       }
     }
   };
 
   const toggleCompanyStatus = async (companyId: string, isActive: boolean) => {
+    setError(null);
     try {
-      await axios.put(`/api/companies/${companyId}`, { isActive: !isActive });
+      await companyAPI.update(companyId, { isActive: !isActive });
       loadData();
-    } catch (error) {
-      alert('Error updating company status');
+    } catch (error: any) {
+      console.error('Error updating company status:', error);
+      if (error.response?.status === 401) {
+        setError('Authentication failed. Please log in again.');
+      } else if (error.response?.status === 403) {
+        setError('Access denied. Admin privileges required.');
+      } else {
+        setError('Error updating company status. Please try again.');
+      }
     }
   };
 
@@ -321,7 +362,9 @@ const AdminDashboard: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {user.company || 'N/A'}
+                  {typeof user.company === 'object' && user.company !== null
+                    ? (user.company as { name?: string; _id?: string }).name || (user.company as { _id?: string })._id || 'N/A'
+                    : user.company || 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(user.createdAt).toLocaleDateString()}
@@ -421,6 +464,35 @@ const AdminDashboard: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                <input
+                  type="text"
+                  value={newCompany.address.state}
+                  onChange={(e) => setNewCompany(prev => ({ 
+                    ...prev, 
+                    address: { ...prev.address, state: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code *</label>
+                <input
+                  type="text"
+                  value={newCompany.address.zipCode}
+                  onChange={(e) => setNewCompany(prev => ({ 
+                    ...prev, 
+                    address: { ...prev.address, zipCode: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Stripe Public Key</label>
                 <input
                   type="text"
@@ -448,6 +520,35 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">From Email *</label>
+                <input
+                  type="email"
+                  value={newCompany.emailConfig.fromEmail}
+                  onChange={(e) => setNewCompany(prev => ({ 
+                    ...prev, 
+                    emailConfig: { ...prev.emailConfig, fromEmail: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">From Name *</label>
+                <input
+                  type="text"
+                  value={newCompany.emailConfig.fromName}
+                  onChange={(e) => setNewCompany(prev => ({ 
+                    ...prev, 
+                    emailConfig: { ...prev.emailConfig, fromName: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -468,6 +569,27 @@ const AdminDashboard: React.FC = () => {
       </div>
     )
   );
+
+  // Simple fallback render to test if component is working
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
+            <p className="text-gray-600">{error}</p>
+            <button 
+              onClick={() => window.location.href = '/login'}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">

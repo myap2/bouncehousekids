@@ -6,14 +6,19 @@ import {
   deleteCompany,
   getCompanyStats,
   getCompanyBranding,
-  updateCompanyBranding
+  updateCompanyBranding,
+  getAllCompanies
 } from '../controllers/companyController';
 import { auth, adminAuth } from '../middleware/auth';
 import { tenantMiddleware, requireCompany } from '../middleware/tenant';
 
 const router = express.Router();
 
+// Temporary test route (remove in production)
+router.post('/test', createCompany);
+
 // Super admin routes (for platform management)
+router.get('/', adminAuth, getAllCompanies);
 router.post('/', adminAuth, createCompany);
 router.get('/:id', adminAuth, getCompany);
 router.put('/:id', adminAuth, updateCompany);

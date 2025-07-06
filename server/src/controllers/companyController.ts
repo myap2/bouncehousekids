@@ -20,10 +20,11 @@ export const createCompany = async (req: Request, res: Response) => {
 
     res.status(201).json(company);
   } catch (error) {
+    console.error('Error creating company:', error); // Log the real error
     if ((error as any).code === 11000) {
       res.status(400).json({ message: 'Subdomain already exists' });
     } else {
-      res.status(400).json({ message: 'Error creating company' });
+      res.status(400).json({ message: (error as any).message || 'Error creating company' });
     }
   }
 };
@@ -152,5 +153,17 @@ export const updateCompanyBranding = async (req: Request, res: Response) => {
     res.json(company);
   } catch (error) {
     res.status(400).json({ message: 'Error updating company branding' });
+  }
+};
+
+export const getAllCompanies = async (req: Request, res: Response) => {
+  try {
+    const companies = await Company.find({})
+      .select('_id name subdomain email phone plan isActive createdAt')
+      .sort({ createdAt: -1 });
+    
+    res.json(companies);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching companies' });
   }
 };

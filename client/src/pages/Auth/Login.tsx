@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, clearError } from '../../store/slices/authSlice';
+import { RootState, AppDispatch } from '../../store';
 import './Auth.css';
 
 interface LoginFormData {
@@ -15,12 +18,28 @@ interface LoginErrors {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error, token } = useSelector((state: RootState) => state.auth);
+  
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: ''
   });
   const [errors, setErrors] = useState<LoginErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (token) {
+      navigate('/');
+    }
+  }, [token, navigate]);
+
+  // Clear Redux error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const validateForm = (): boolean => {
     const newErrors: LoginErrors = {};
@@ -48,18 +67,19 @@ const Login: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
     try {
-      // TODO: Implement actual API call
-      // const response = await loginUser(formData);
-      // store token in localStorage or Redux
-      navigate('/');
-    } catch (error) {
+      console.log('Dispatching login action...');
+      const result = await dispatch(login({ email: formData.email, password: formData.password })).unwrap();
+      console.log('Login successful:', result);
+      // Only navigate if login was successful
+      if (result && result.token) {
+        navigate('/');
+      }
+    } catch (error: any) {
+      console.error('Login failed:', error);
       setErrors({
-        general: 'Invalid email or password'
+        general: error || 'Invalid email or password'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -84,8 +104,8 @@ const Login: React.FC = () => {
         <h2>Welcome Back</h2>
         <p className="auth-subtitle">Sign in to your account</p>
 
-        {errors.general && (
-          <div className="error-message">{errors.general}</div>
+        {(errors.general || error) && (
+          <div className="error-message">{errors.general || error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -118,8 +138,8 @@ const Login: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <button type="submit" className="auth-button" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+            <button type="submit" className="auth-button" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </div>
         </form>
