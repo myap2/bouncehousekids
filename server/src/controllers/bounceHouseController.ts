@@ -6,9 +6,10 @@ export const createBounceHouse = async (req: Request, res: Response) => {
     const bounceHouse = new BounceHouse(req.body);
     await bounceHouse.save();
     res.status(201).json(bounceHouse);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating bounce house:', error);
-    res.status(400).json({ message: error.message || 'Error creating bounce house' });
+    const errorMessage = error instanceof Error ? error.message : 'Error creating bounce house';
+    res.status(400).json({ message: errorMessage });
   }
 };
 

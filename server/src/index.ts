@@ -25,10 +25,10 @@ app.use(express.json());
 // --- Multer setup for file uploads ---
 const uploadDir = path.join(__dirname, '../../uploads');
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (req: express.Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: (req: express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + '-' + file.originalname);
   }
@@ -39,7 +39,7 @@ const upload = multer({ storage });
 app.use('/uploads', express.static(uploadDir));
 
 // --- Upload endpoint ---
-app.post('/api/upload', upload.single('image'), (req, res) => {
+app.post('/api/upload', upload.single('image'), (req: express.Request, res: express.Response) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
