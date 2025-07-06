@@ -66,6 +66,8 @@ const AdminDashboard: React.FC = () => {
     }
   });
 
+  const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
+
   useEffect(() => {
     // Check if user is authenticated and has admin role
     const token = localStorage.getItem('token');
@@ -117,8 +119,24 @@ const AdminDashboard: React.FC = () => {
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    let logoUrl = '';
+    if (companyLogoFile) {
+      const formData = new FormData();
+      formData.append('image', companyLogoFile);
+      try {
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        logoUrl = uploadData.url;
+      } catch (err) {
+        setError('Failed to upload logo.');
+        return;
+      }
+    }
     try {
-      await companyAPI.create(newCompany);
+      await companyAPI.create({ ...newCompany, logoUrl });
       setShowCreateCompany(false);
       setNewCompany({
         name: '',
@@ -130,7 +148,8 @@ const AdminDashboard: React.FC = () => {
         paymentConfig: { stripePublicKey: '', stripeSecretKey: '' },
         emailConfig: { fromEmail: '', fromName: '' }
       });
-      loadData(); // Refresh the list
+      setCompanyLogoFile(null);
+      loadData();
       alert('Company created successfully!');
     } catch (error: any) {
       console.error('Error creating company:', error);
@@ -547,6 +566,16 @@ const AdminDashboard: React.FC = () => {
                   required
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => setCompanyLogoFile(e.target.files?.[0] || null)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
             </div>
 
             <div className="flex justify-end space-x-3">

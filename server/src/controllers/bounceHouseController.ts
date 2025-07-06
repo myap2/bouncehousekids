@@ -7,7 +7,8 @@ export const createBounceHouse = async (req: Request, res: Response) => {
     await bounceHouse.save();
     res.status(201).json(bounceHouse);
   } catch (error) {
-    res.status(400).json({ message: 'Error creating bounce house' });
+    console.error('Error creating bounce house:', error);
+    res.status(400).json({ message: error.message || 'Error creating bounce house' });
   }
 };
 
