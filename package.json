@@ -23,7 +23,17 @@
     "pre-commit": "lint-staged",
     "validate": "npm run lint && npm run test && npm run build",
     "clean": "rm -rf node_modules server/node_modules client/node_modules server/dist client/build coverage",
-    "security-audit": "npm audit && cd server && npm audit && cd ../client && npm audit"
+    "security-audit": "npm audit && cd server && npm audit && cd ../client && npm audit",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:related": "jest --bail --findRelatedTests",
+    "lint": "eslint src/**/*.{js,ts} --quiet",
+    "lint:fix": "eslint src/**/*.{js,ts} --quiet --fix",
+    "seed": "ts-node src/scripts/seed.ts",
+    "create-token": "ts-node src/scripts/createAdminToken.ts"
   },
   "lint-staged": {
     "server/**/*.{js,ts}": [
