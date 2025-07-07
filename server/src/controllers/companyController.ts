@@ -158,7 +158,7 @@ export const updateCompanyBranding = async (req: Request, res: Response) => {
 
 export const getAllCompanies = async (req: Request, res: Response) => {
   try {
-    const companies = await Company.find({})
+    const companies = await Company.find({ isActive: true })
       .select('_id name subdomain email phone plan isActive createdAt')
       .sort({ createdAt: -1 });
     

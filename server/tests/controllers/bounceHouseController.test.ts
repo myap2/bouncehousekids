@@ -15,6 +15,7 @@ import {
 } from '../../src/controllers/bounceHouseController';
 import { auth } from '../../src/middleware/auth';
 import * as locationService from '../../src/services/locationService';
+import { createTestCompany, createTestUser, createTestBounceHouse } from '../setup';
 
 // Mock middleware and services
 jest.mock('../../src/middleware/auth');
@@ -33,6 +34,11 @@ app.put('/api/bounce-houses/:id', auth, updateBounceHouse);
 app.delete('/api/bounce-houses/:id', auth, deleteBounceHouse);
 app.post('/api/bounce-houses/:id/reviews', auth, addReview);
 
+// Restore all mocks after each test to prevent leaks
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe('Bounce House Controller', () => {
   let company: any;
   let company2: any;
@@ -43,8 +49,8 @@ describe('Bounce House Controller', () => {
   let bounceHouse2: any;
 
   beforeEach(async () => {
-    // Create test companies
-    company = await Company.create({
+    // Create test companies using helper function
+    company = await createTestCompany({
       name: 'Test Company',
       subdomain: 'test-company',
       email: 'test@company.com',
@@ -55,19 +61,15 @@ describe('Bounce House Controller', () => {
         state: 'TS',
         zipCode: '12345'
       },
-      location: {
-        type: 'Point',
-        coordinates: [-74.0060, 40.7128] // New York coordinates
-      },
       settings: {
         deliveryRadius: 25,
         requiresDeposit: false,
-        depositAmount: 0,
+        depositPercentage: 0,
         cancellationPolicy: 'Standard'
       }
     });
 
-    company2 = await Company.create({
+    company2 = await createTestCompany({
       name: 'Test Company 2',
       subdomain: 'test-company-2',
       email: 'test2@company.com',
@@ -78,29 +80,25 @@ describe('Bounce House Controller', () => {
         state: 'TS',
         zipCode: '54321'
       },
-      location: {
-        type: 'Point',
-        coordinates: [-118.2437, 34.0522] // Los Angeles coordinates
-      },
       settings: {
         deliveryRadius: 30,
         requiresDeposit: true,
-        depositAmount: 100,
+        depositPercentage: 100,
         cancellationPolicy: 'Strict'
       }
     });
 
-    // Create test users
-    mockUser = await User.create({
+    // Create test users using helper function
+    mockUser = await createTestUser({
       email: 'user@example.com',
       password: 'password123',
       firstName: 'Test',
       lastName: 'User',
-      role: 'user',
+      role: 'customer',
       company: company._id
     });
 
-    mockAdmin = await User.create({
+    mockAdmin = await createTestUser({
       email: 'admin@example.com',
       password: 'admin123',
       firstName: 'Admin',
@@ -108,7 +106,7 @@ describe('Bounce House Controller', () => {
       role: 'admin'
     });
 
-    mockCompanyAdmin = await User.create({
+    mockCompanyAdmin = await createTestUser({
       email: 'company-admin@example.com',
       password: 'company123',
       firstName: 'Company',
@@ -117,8 +115,8 @@ describe('Bounce House Controller', () => {
       company: company._id
     });
 
-    // Create test bounce houses
-    bounceHouse = await BounceHouse.create({
+    // Create test bounce houses using helper function
+    bounceHouse = await createTestBounceHouse({
       name: 'Super Fun Castle',
       description: 'A magical castle bounce house',
       theme: 'princess',
@@ -128,23 +126,23 @@ describe('Bounce House Controller', () => {
         height: 12
       },
       capacity: {
-        maxOccupants: 8,
-        ageRange: '3-12'
+        minAge: 3,
+        maxAge: 12,
+        maxWeight: 100,
+        maxOccupants: 8
       },
       price: {
         daily: 150,
         weekly: 900,
-        monthly: 3000
+        weekend: 200
       },
       images: ['image1.jpg', 'image2.jpg'],
       features: ['slide', 'basketball hoop', 'obstacle course'],
       company: company._id,
-      isActive: true,
-      rating: 4.5,
-      reviews: []
+      rating: 4.5
     });
 
-    bounceHouse2 = await BounceHouse.create({
+    bounceHouse2 = await createTestBounceHouse({
       name: 'Pirate Ship Adventure',
       description: 'Ahoy matey! A pirate-themed bounce house',
       theme: 'pirate',
@@ -154,20 +152,20 @@ describe('Bounce House Controller', () => {
         height: 14
       },
       capacity: {
-        maxOccupants: 10,
-        ageRange: '4-14'
+        minAge: 4,
+        maxAge: 14,
+        maxWeight: 120,
+        maxOccupants: 10
       },
       price: {
         daily: 200,
         weekly: 1200,
-        monthly: 4000
+        weekend: 250
       },
       images: ['pirate1.jpg', 'pirate2.jpg'],
       features: ['slide', 'climbing wall', 'treasure hunt'],
       company: company2._id,
-      isActive: true,
-      rating: 4.8,
-      reviews: []
+      rating: 4.8
     });
   });
 
@@ -189,13 +187,15 @@ describe('Bounce House Controller', () => {
           height: 13
         },
         capacity: {
-          maxOccupants: 9,
-          ageRange: '3-13'
+          minAge: 3,
+          maxAge: 13,
+          maxWeight: 120,
+          maxOccupants: 9
         },
         price: {
           daily: 175,
           weekly: 1000,
-          monthly: 3500
+          weekend: 225
         },
         features: ['slide', 'moat', 'drawbridge']
       };
@@ -228,13 +228,15 @@ describe('Bounce House Controller', () => {
           height: 15
         },
         capacity: {
-          maxOccupants: 12,
-          ageRange: '5-15'
+          minAge: 5,
+          maxAge: 15,
+          maxWeight: 150,
+          maxOccupants: 12
         },
         price: {
           daily: 225,
           weekly: 1350,
-          monthly: 4500
+          weekend: 275
         },
         features: ['slide', 'obstacle course', 'climbing wall']
       };
@@ -458,7 +460,7 @@ describe('Bounce House Controller', () => {
         price: {
           daily: 175,
           weekly: 1050,
-          monthly: 3500
+          weekend: 225
         }
       };
 
@@ -500,7 +502,14 @@ describe('Bounce House Controller', () => {
         firstName: 'Other',
         lastName: 'Admin',
         role: 'company-admin',
-        company: company2._id
+        company: company2._id,
+        phone: '555-123-4567',
+        address: {
+          street: '123 Other St',
+          city: 'Other City',
+          state: 'OC',
+          zipCode: '12345'
+        }
       });
 
       (auth as jest.Mock).mockImplementation((req: any, res: any, next: any) => {
@@ -567,7 +576,14 @@ describe('Bounce House Controller', () => {
         firstName: 'Other',
         lastName: 'Admin',
         role: 'company-admin',
-        company: company2._id
+        company: company2._id,
+        phone: '555-123-4567',
+        address: {
+          street: '123 Other St',
+          city: 'Other City',
+          state: 'OC',
+          zipCode: '12345'
+        }
       });
 
       (auth as jest.Mock).mockImplementation((req: any, res: any, next: any) => {
@@ -753,7 +769,13 @@ describe('Bounce House Controller', () => {
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
       // Mock database error
-      jest.spyOn(BounceHouse, 'find').mockRejectedValue(new Error('Database error'));
+      jest.spyOn(BounceHouse, 'find').mockReturnValue({
+        populate: () => ({
+          sort: () => ({
+            exec: jest.fn().mockRejectedValue(new Error('Database error'))
+          })
+        })
+      } as any);
 
       const response = await request(app)
         .get('/api/bounce-houses')
