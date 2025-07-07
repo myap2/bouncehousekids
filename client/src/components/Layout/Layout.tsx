@@ -31,9 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {token && user?.role === 'admin' && <Link to="/admin">Admin</Link>}
           {token ? (
             <div className="user-menu">
-              <span className="user-name">
-                Welcome, {user?.firstName || 'User'}!
-              </span>
+              <span className="user-name">Welcome, {user?.firstName || 'User'}!</span>
               <button onClick={handleLogout} className="logout-button">
                 Logout
               </button>
@@ -46,9 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           )}
         </div>
       </nav>
-      <main className="main-content">
-        {children}
-      </main>
+      <main className="main-content">{children}</main>
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-section">
@@ -68,4 +64,4 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 };
 
-export default Layout; 
+export default Layout;

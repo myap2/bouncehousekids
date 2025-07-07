@@ -20,7 +20,10 @@ const Home: React.FC = () => {
         <div className="features-grid">
           <div className="feature-card">
             <h3>Premium Quality</h3>
-            <p>Our bounce houses are made with the highest quality materials and regularly maintained.</p>
+            <p>
+              Our bounce houses are made with the highest quality materials and regularly
+              maintained.
+            </p>
           </div>
           <div className="feature-card">
             <h3>Easy Booking</h3>
@@ -71,4 +74,4 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home; 
+export default Home;

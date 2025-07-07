@@ -3,16 +3,20 @@
 ## Issues Fixed
 
 ### 1. Port Configuration Issue
+
 **Problem**: API calls were going to `http://localhost:3000/api/companies` instead of `http://localhost:5000/api/companies`
 
-**Solution**: 
+**Solution**:
+
 - Added proxy configuration to `client/package.json` to forward API requests from port 3000 to 5000
 - Updated `client/src/services/api.ts` to use relative paths (`/api`) instead of absolute URLs
 
 ### 2. Authentication Issue
+
 **Problem**: Company creation endpoint requires admin authentication, but no easy way to get admin tokens for testing
 
 **Solutions**:
+
 - Added temporary test endpoint `/api/companies/test` that doesn't require authentication
 - Created `createAdminToken.ts` script to generate admin tokens for testing
 - Added comprehensive test scripts
@@ -20,6 +24,7 @@
 ## How to Use
 
 ### Option 1: Test without authentication (Easiest)
+
 ```bash
 curl "http://localhost:5000/api/companies/test" \
   -H "Content-Type: application/json" \
@@ -32,6 +37,7 @@ curl "http://localhost:5000/api/companies/test" \
 ```
 
 ### Option 2: Get admin token and use authenticated endpoint
+
 ```bash
 # 1. Seed the database (if not done already)
 cd server && npm run seed
@@ -52,6 +58,7 @@ curl "http://localhost:5000/api/companies" \
 ```
 
 ### Option 3: Run automated tests
+
 ```bash
 # On Windows
 .\test-api.ps1
@@ -81,4 +88,4 @@ curl "http://localhost:5000/api/companies" \
 - **Email**: admin@bouncehousekids.com
 - **Password**: password123
 
-These are created when you run `npm run seed` in the server directory. 
+These are created when you run `npm run seed` in the server directory.

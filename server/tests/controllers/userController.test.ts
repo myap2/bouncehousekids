@@ -16,6 +16,7 @@ import {
   updateUserProfile
 } from '../../src/controllers/userController';
 import { auth } from '../../src/middleware/auth';
+import { createTestCompany, createTestUser } from '../setup';
 
 // Mock middleware
 jest.mock('../../src/middleware/auth');
@@ -41,8 +42,8 @@ describe('User Controller', () => {
   let mockAdmin: any;
 
   beforeEach(async () => {
-    // Create test company
-    company = await Company.create({
+    // Create test company using helper function
+    company = await createTestCompany({
       name: 'Test Company',
       subdomain: 'test-company',
       email: 'test@company.com',
@@ -56,13 +57,13 @@ describe('User Controller', () => {
       settings: {
         deliveryRadius: 25,
         requiresDeposit: false,
-        depositAmount: 0,
+        depositPercentage: 0,
         cancellationPolicy: 'Standard'
       }
     });
 
-    // Create test users
-    mockUser = await User.create({
+    // Create test users using helper function
+    mockUser = await createTestUser({
       email: 'test@example.com',
       password: 'password123',
       firstName: 'Test',
@@ -77,7 +78,7 @@ describe('User Controller', () => {
       company: company._id
     });
 
-    mockAdmin = await User.create({
+    mockAdmin = await createTestUser({
       email: 'admin@example.com',
       password: 'admin123',
       firstName: 'Admin',
@@ -118,7 +119,7 @@ describe('User Controller', () => {
       expect(response.body.user.email).toBe(userData.email);
       expect(response.body.user.firstName).toBe(userData.firstName);
       expect(response.body.user.lastName).toBe(userData.lastName);
-      expect(response.body.user.role).toBe('user');
+      expect(response.body.user.role).toBe('customer');
     });
 
     it('should return error for existing email', async () => {
@@ -166,7 +167,7 @@ describe('User Controller', () => {
 
       expect(response.body.token).toBeDefined();
       expect(response.body.user.email).toBe(loginData.email);
-      expect(response.body.user.role).toBe('user');
+      expect(response.body.user.role).toBe('customer');
     });
 
     it('should return error for invalid email', async () => {
@@ -481,7 +482,14 @@ describe('User Controller', () => {
         email: 'jwttest@example.com',
         password: 'password123',
         firstName: 'JWT',
-        lastName: 'Test'
+        lastName: 'Test',
+        phone: '555-123-4567',
+        address: {
+          street: '123 JWT St',
+          city: 'JWT City',
+          state: 'JW',
+          zipCode: '12345'
+        }
       };
 
       const response = await request(app)

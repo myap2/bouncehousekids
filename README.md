@@ -46,6 +46,7 @@ bouncehousekidsv2/
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    # Install backend dependencies
    cd server
@@ -61,6 +62,7 @@ bouncehousekidsv2/
    - Add necessary environment variables (see .env.example files)
 
 4. Start the development servers:
+
    ```bash
    # Start backend server
    cd server
@@ -74,6 +76,7 @@ bouncehousekidsv2/
 ## Environment Variables
 
 ### Backend (.env)
+
 ```
 PORT=5000
 MONGODB_URI=your_mongodb_uri
@@ -83,6 +86,7 @@ SENDGRID_API_KEY=your_sendgrid_api_key
 ```
 
 ### Frontend (.env)
+
 ```
 REACT_APP_API_URL=http://localhost:5000
 REACT_APP_STRIPE_PUBLIC_KEY=your_stripe_public_key
@@ -98,4 +102,4 @@ REACT_APP_STRIPE_PUBLIC_KEY=your_stripe_public_key
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.
