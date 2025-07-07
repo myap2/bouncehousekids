@@ -4,16 +4,14 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
-# Install all dependencies (including dev dependencies for build)
-RUN npm ci
-
-# Copy source code
+# Copy the entire project (for workspace setup)
 COPY . .
 
-# Build the application
+# Install all dependencies from root (workspace setup)
+RUN npm ci
+
+# Build the server application
+WORKDIR /app/server
 RUN npm run build
 
 # Remove dev dependencies after build
