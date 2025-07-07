@@ -54,11 +54,16 @@ describe('Auth Slice', () => {
     });
 
     it('should load token from localStorage on initialization', () => {
+      // Set up localStorage mock before importing the reducer
       localStorageMock.getItem.mockReturnValue('mock-token');
+      
+      // Re-import the auth slice to get fresh initial state
+      jest.resetModules();
+      const { default: freshAuthReducer } = require('../authSlice');
       
       const newStore = configureStore({
         reducer: {
-          auth: authReducer,
+          auth: freshAuthReducer,
         },
       });
 
