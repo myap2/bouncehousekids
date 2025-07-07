@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { act } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import Layout from '../../Layout/Layout';
 import authReducer from '../../../store/slices/authSlice';
+
+// Mock environment variables
+const originalEnv = process.env;
+beforeAll(() => {
+  process.env = {
+    ...originalEnv,
+    REACT_APP_APP_NAME: 'My Bounce Place',
+    REACT_APP_COMPANY_EMAIL: 'info@mybounceplace.com',
+    REACT_APP_COMPANY_PHONE: '(555) 123-4567',
+  };
+});
+
+afterAll(() => {
+  process.env = originalEnv;
+});
 
 // Mock the API service to avoid ES module issues
 jest.mock('../../../services/api', () => ({
@@ -73,14 +88,16 @@ const TestWrapper: React.FC<{ children: React.ReactNode; store?: any }> = ({
 
 describe('Layout Component', () => {
   describe('When user is not authenticated', () => {
-    it('should render login and register links', () => {
-      render(
-        <TestWrapper>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+    it('should render login and register links', async () => {
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText(/login/i)).toBeInTheDocument();
       expect(screen.getByText(/register/i)).toBeInTheDocument();
@@ -88,54 +105,62 @@ describe('Layout Component', () => {
       expect(screen.queryByText(/logout/i)).not.toBeInTheDocument();
     });
 
-    it('should render the company logo/brand', () => {
-      render(
-        <TestWrapper>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+    it('should render the company logo/brand', async () => {
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
-      expect(screen.getByText(/bouncehouse kids/i)).toBeInTheDocument();
+      expect(screen.getByText(/my bounce place/i)).toBeInTheDocument();
     });
 
-    it('should have navigation links to browse bounce houses', () => {
-      render(
-        <TestWrapper>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+    it('should have navigation links to browse bounce houses', async () => {
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText(/bounce houses/i)).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /bounce houses/i })).toHaveAttribute('href', '/bounce-houses');
     });
 
-    it('should render main content area', () => {
-      render(
-        <TestWrapper>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+    it('should render main content area', async () => {
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText('Test Content')).toBeInTheDocument();
     });
 
-    it('should render footer with contact information', () => {
-      render(
-        <TestWrapper>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+    it('should render footer with contact information', async () => {
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText(/contact us/i)).toBeInTheDocument();
-      expect(screen.getByText(/info@bouncehousekids.com/i)).toBeInTheDocument();
+      expect(screen.getByText(/info@mybounceplace.com/i)).toBeInTheDocument();
       expect(screen.getByText(/\(555\) 123-4567/i)).toBeInTheDocument();
     });
   });
@@ -149,20 +174,22 @@ describe('Layout Component', () => {
       role: 'user',
     };
 
-    it('should render user-specific navigation', () => {
+    it('should render user-specific navigation', async () => {
       const store = createMockStore({
         isAuthenticated: true,
         user: mockUser,
         token: 'mock-token',
       });
 
-      render(
-        <TestWrapper store={store}>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+      await act(async () => {
+        render(
+          <TestWrapper store={store}>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText(/my bookings/i)).toBeInTheDocument();
       expect(screen.getByText(/logout/i)).toBeInTheDocument();
@@ -170,38 +197,42 @@ describe('Layout Component', () => {
       expect(screen.queryByText(/register/i)).not.toBeInTheDocument();
     });
 
-    it('should display user name', () => {
+    it('should display user name', async () => {
       const store = createMockStore({
         isAuthenticated: true,
         user: mockUser,
         token: 'mock-token',
       });
 
-      render(
-        <TestWrapper store={store}>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+      await act(async () => {
+        render(
+          <TestWrapper store={store}>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText(/welcome, john!/i)).toBeInTheDocument();
     });
 
-    it('should not show admin links for regular users', () => {
+    it('should not show admin links for regular users', async () => {
       const store = createMockStore({
         isAuthenticated: true,
         user: mockUser,
         token: 'mock-token',
       });
 
-      render(
-        <TestWrapper store={store}>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+      await act(async () => {
+        render(
+          <TestWrapper store={store}>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.queryByText(/admin/i)).not.toBeInTheDocument();
     });
@@ -216,39 +247,43 @@ describe('Layout Component', () => {
       role: 'admin',
     };
 
-    it('should show admin link for admin users', () => {
+    it('should show admin link for admin users', async () => {
       const store = createMockStore({
         isAuthenticated: true,
         user: mockAdmin,
         token: 'mock-token',
       });
 
-      render(
-        <TestWrapper store={store}>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+      await act(async () => {
+        render(
+          <TestWrapper store={store}>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText(/admin/i)).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /admin/i })).toHaveAttribute('href', '/admin');
     });
 
-    it('should display admin user name', () => {
+    it('should display admin user name', async () => {
       const store = createMockStore({
         isAuthenticated: true,
         user: mockAdmin,
         token: 'mock-token',
       });
 
-      render(
-        <TestWrapper store={store}>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+      await act(async () => {
+        render(
+          <TestWrapper store={store}>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       expect(screen.getByText(/welcome, jane!/i)).toBeInTheDocument();
     });
@@ -263,23 +298,28 @@ describe('Layout Component', () => {
       role: 'user',
     };
 
-    it('should call logout when logout button is clicked', () => {
+    it('should call logout when logout button is clicked', async () => {
       const store = createMockStore({
         isAuthenticated: true,
         user: mockUser,
         token: 'mock-token',
       });
 
-      render(
-        <TestWrapper store={store}>
-          <Layout>
-            <div>Test Content</div>
-          </Layout>
-        </TestWrapper>
-      );
+      await act(async () => {
+        render(
+          <TestWrapper store={store}>
+            <Layout>
+              <div>Test Content</div>
+            </Layout>
+          </TestWrapper>
+        );
+      });
 
       const logoutButton = screen.getByText(/logout/i);
-      fireEvent.click(logoutButton);
+      
+      await act(async () => {
+        fireEvent.click(logoutButton);
+      });
 
       // After logout, should show login/register links
       expect(screen.getByText(/login/i)).toBeInTheDocument();

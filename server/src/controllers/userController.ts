@@ -162,7 +162,12 @@ export const registerUser = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    res.status(400).json({ message: 'Error creating user' });
+    console.error('Registration error:', error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(400).json({ message: 'Error creating user' });
+    }
   }
 };
 

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { register } from '../../store/slices/authSlice';
 import './Auth.css';
 
 interface RegisterFormData {
@@ -8,6 +11,13 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
 }
 
 interface RegisterErrors {
@@ -16,20 +26,36 @@ interface RegisterErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
   general?: string;
 }
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+  
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    }
   });
   const [errors, setErrors] = useState<RegisterErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: RegisterErrors = {};
@@ -60,6 +86,26 @@ const Register: React.FC = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    if (!formData.phone) {
+      newErrors.phone = 'Phone number is required';
+    }
+
+    if (!formData.address.street) {
+      newErrors.address = { ...newErrors.address, street: 'Street address is required' };
+    }
+
+    if (!formData.address.city) {
+      newErrors.address = { ...newErrors.address, city: 'City is required' };
+    }
+
+    if (!formData.address.state) {
+      newErrors.address = { ...newErrors.address, state: 'State is required' };
+    }
+
+    if (!formData.address.zipCode) {
+      newErrors.address = { ...newErrors.address, zipCode: 'ZIP code is required' };
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -71,29 +117,52 @@ const Register: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
     try {
-      // TODO: Implement actual API call
-      // const response = await registerUser(formData);
-      // store token in localStorage or Redux
-      navigate('/');
-    } catch (error) {
+      const { confirmPassword, ...registrationData } = formData;
+      const result = await dispatch(register(registrationData)).unwrap();
+      
+      if (result) {
+        navigate('/');
+      }
+    } catch (error: any) {
       setErrors({
-        general: 'Registration failed. Please try again.'
+        general: error || 'Registration failed. Please try again.'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name.startsWith('address.')) {
+      const addressField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [addressField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+    
     // Clear error when user starts typing
-    if (errors[name as keyof RegisterErrors]) {
+    if (name.startsWith('address.')) {
+      const addressField = name.split('.')[1];
+      if (errors.address?.[addressField as keyof typeof errors.address]) {
+        setErrors(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            [addressField]: undefined
+          }
+        }));
+      }
+    } else if (errors[name as keyof RegisterErrors]) {
       setErrors(prev => ({
         ...prev,
         [name]: undefined
@@ -107,8 +176,8 @@ const Register: React.FC = () => {
         <h2>Create Account</h2>
         <p className="auth-subtitle">Join BounceHouse Kids today</p>
 
-        {errors.general && (
-          <div className="error-message">{errors.general}</div>
+        {(errors.general || error) && (
+          <div className="error-message">{errors.general || error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -157,6 +226,78 @@ const Register: React.FC = () => {
           </div>
 
           <div className="form-group">
+            <label htmlFor="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={errors.phone ? 'error' : ''}
+              placeholder="Enter your phone number"
+            />
+            {errors.phone && <span className="error-text">{errors.phone}</span>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="address.street">Street Address</label>
+            <input
+              type="text"
+              id="address.street"
+              name="address.street"
+              value={formData.address.street}
+              onChange={handleChange}
+              className={errors.address?.street ? 'error' : ''}
+              placeholder="Enter your street address"
+            />
+            {errors.address?.street && <span className="error-text">{errors.address.street}</span>}
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="address.city">City</label>
+              <input
+                type="text"
+                id="address.city"
+                name="address.city"
+                value={formData.address.city}
+                onChange={handleChange}
+                className={errors.address?.city ? 'error' : ''}
+                placeholder="Enter your city"
+              />
+              {errors.address?.city && <span className="error-text">{errors.address.city}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="address.state">State</label>
+              <input
+                type="text"
+                id="address.state"
+                name="address.state"
+                value={formData.address.state}
+                onChange={handleChange}
+                className={errors.address?.state ? 'error' : ''}
+                placeholder="Enter your state"
+              />
+              {errors.address?.state && <span className="error-text">{errors.address.state}</span>}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="address.zipCode">ZIP Code</label>
+            <input
+              type="text"
+              id="address.zipCode"
+              name="address.zipCode"
+              value={formData.address.zipCode}
+              onChange={handleChange}
+              className={errors.address?.zipCode ? 'error' : ''}
+              placeholder="Enter your ZIP code"
+            />
+            {errors.address?.zipCode && <span className="error-text">{errors.address.zipCode}</span>}
+          </div>
+
+          <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
               type="password"
@@ -185,8 +326,8 @@ const Register: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <button type="submit" className="auth-button" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+            <button type="submit" className="auth-button" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </div>
         </form>

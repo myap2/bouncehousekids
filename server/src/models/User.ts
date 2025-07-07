@@ -24,6 +24,8 @@ export interface IUser extends Document {
   bookings: mongoose.Types.ObjectId[];
   stripeCustomerId?: string;
   company?: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -33,7 +35,13 @@ const UserSchema = new Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true
+    lowercase: true,
+    validate: {
+      validator: function(v: string) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      message: 'Please provide a valid email address'
+    }
   },
   password: {
     type: String,
@@ -65,17 +73,23 @@ const UserSchema = new Schema({
     state: { type: String, required: true },
     zipCode: { type: String, required: true }
   },
-  paymentMethods: [{
-    type: { type: String, required: true },
-    last4: { type: String, required: true },
-    expiryMonth: { type: Number, required: true },
-    expiryYear: { type: Number, required: true },
-    isDefault: { type: Boolean, default: false }
-  }],
-  bookings: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Booking'
-  }],
+  paymentMethods: {
+    type: [{
+      type: { type: String, required: true },
+      last4: { type: String, required: true },
+      expiryMonth: { type: Number, required: true },
+      expiryYear: { type: Number, required: true },
+      isDefault: { type: Boolean, default: false }
+    }],
+    default: []
+  },
+  bookings: {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Booking'
+    }],
+    default: []
+  },
   stripeCustomerId: {
     type: String,
     sparse: true
