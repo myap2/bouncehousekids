@@ -13,7 +13,9 @@ import {
   updateUser,
   deleteUser,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  registerUser,
+  loginUser
 } from '../../src/controllers/userController';
 import { auth } from '../../src/middleware/auth';
 import { createTestCompany, createTestUser } from '../setup';
@@ -35,6 +37,10 @@ app.put('/api/users/:id', auth, updateUser);
 app.delete('/api/users/:id', auth, deleteUser);
 app.get('/api/user/profile', auth, getUserProfile);
 app.put('/api/user/profile', auth, updateUserProfile);
+
+// Add new routes for registerUser and loginUser
+app.post('/api/users/register', registerUser);
+app.post('/api/users/login', loginUser);
 
 describe('User Controller', () => {
   let company: any;
@@ -502,6 +508,299 @@ describe('User Controller', () => {
       // Verify token is valid
       const decoded = jwt.verify(response.body.token, process.env.JWT_SECRET || 'test-jwt-secret');
       expect(decoded).toBeDefined();
+    });
+  });
+
+  describe('POST /api/users/register (registerUser)', () => {
+    it('should register a new user successfully with all required fields', async () => {
+      const userData = {
+        email: 'newuser@example.com',
+        password: 'password123',
+        firstName: 'New',
+        lastName: 'User',
+        phone: '987-654-3210',
+        address: {
+          street: '456 New St',
+          city: 'New City',
+          state: 'NW',
+          zipCode: '67890'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(201);
+
+      expect(response.body.token).toBeDefined();
+      expect(response.body.user.email).toBe(userData.email);
+      expect(response.body.user.firstName).toBe(userData.firstName);
+      expect(response.body.user.lastName).toBe(userData.lastName);
+      expect(response.body.user.role).toBe('customer');
+      expect(response.body.user._id).toBeDefined();
+
+      // Verify user was actually saved to database
+      const savedUser = await User.findOne({ email: userData.email });
+      expect(savedUser).toBeDefined();
+      expect(savedUser?.firstName).toBe(userData.firstName);
+      expect(savedUser?.phone).toBe(userData.phone);
+      expect(savedUser?.address.street).toBe(userData.address.street);
+    });
+
+    it('should register user with company context when available', async () => {
+      const userData = {
+        email: 'companyuser@example.com',
+        password: 'password123',
+        firstName: 'Company',
+        lastName: 'User',
+        phone: '555-123-4567',
+        address: {
+          street: '789 Company St',
+          city: 'Company City',
+          state: 'CC',
+          zipCode: '11111'
+        }
+      };
+
+      // Mock company context
+      const req = { company: company, body: userData } as any;
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+
+      await registerUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          token: expect.any(String),
+          user: expect.objectContaining({
+            email: userData.email,
+            role: 'customer'
+          })
+        })
+      );
+    });
+
+    it('should return error for existing email', async () => {
+      const userData = {
+        email: 'test@example.com', // Already exists
+        password: 'password123',
+        firstName: 'Test',
+        lastName: 'User',
+        phone: '123-456-7890',
+        address: {
+          street: '123 Test St',
+          city: 'Test City',
+          state: 'TS',
+          zipCode: '12345'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(400);
+
+      expect(response.body.message).toBe('User already exists');
+    });
+
+    it('should return error for missing required fields', async () => {
+      const userData = {
+        email: 'incomplete@example.com'
+        // Missing password, firstName, lastName, phone, address
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(400);
+
+      expect(response.body.message).toContain('User validation failed');
+    });
+
+    it('should return error for invalid email format', async () => {
+      const userData = {
+        email: 'invalid-email',
+        password: 'password123',
+        firstName: 'Test',
+        lastName: 'User',
+        phone: '123-456-7890',
+        address: {
+          street: '123 Test St',
+          city: 'Test City',
+          state: 'TS',
+          zipCode: '12345'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(400);
+
+      expect(response.body.message).toContain('User validation failed');
+    });
+
+    it('should return error for password too short', async () => {
+      const userData = {
+        email: 'shortpass@example.com',
+        password: '123', // Too short
+        firstName: 'Test',
+        lastName: 'User',
+        phone: '123-456-7890',
+        address: {
+          street: '123 Test St',
+          city: 'Test City',
+          state: 'TS',
+          zipCode: '12345'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(400);
+
+      expect(response.body.message).toContain('User validation failed');
+    });
+
+    it('should hash password before saving', async () => {
+      const userData = {
+        email: 'hashtest@example.com',
+        password: 'password123',
+        firstName: 'Hash',
+        lastName: 'Test',
+        phone: '123-456-7890',
+        address: {
+          street: '123 Hash St',
+          city: 'Hash City',
+          state: 'HS',
+          zipCode: '12345'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(201);
+
+      // Verify password was hashed
+      const savedUser = await User.findOne({ email: userData.email });
+      expect(savedUser?.password).not.toBe(userData.password);
+      expect(savedUser?.password).toMatch(/^\$2[aby]\$\d{1,2}\$[./A-Za-z0-9]{53}$/); // bcrypt hash pattern
+    });
+
+    it('should set default role as customer', async () => {
+      const userData = {
+        email: 'defaultrole@example.com',
+        password: 'password123',
+        firstName: 'Default',
+        lastName: 'Role',
+        phone: '123-456-7890',
+        address: {
+          street: '123 Default St',
+          city: 'Default City',
+          state: 'DF',
+          zipCode: '12345'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(201);
+
+      expect(response.body.user.role).toBe('customer');
+
+      // Verify in database
+      const savedUser = await User.findOne({ email: userData.email });
+      expect(savedUser?.role).toBe('customer');
+    });
+
+    it('should initialize empty arrays for paymentMethods and bookings', async () => {
+      const userData = {
+        email: 'arrays@example.com',
+        password: 'password123',
+        firstName: 'Array',
+        lastName: 'Test',
+        phone: '123-456-7890',
+        address: {
+          street: '123 Array St',
+          city: 'Array City',
+          state: 'AR',
+          zipCode: '12345'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect(201);
+
+      // Verify arrays are initialized
+      const savedUser = await User.findOne({ email: userData.email });
+      expect(savedUser?.paymentMethods).toEqual([]);
+      expect(savedUser?.bookings).toEqual([]);
+    });
+  });
+
+  describe('POST /api/users/login (loginUser)', () => {
+    it('should login successfully with correct credentials', async () => {
+      const loginData = {
+        email: 'test@example.com',
+        password: 'password123'
+      };
+
+      const response = await request(app)
+        .post('/api/users/login')
+        .send(loginData)
+        .expect(200);
+
+      expect(response.body.token).toBeDefined();
+      expect(response.body.user.email).toBe(loginData.email);
+      expect(response.body.user.role).toBe('customer');
+      expect(response.body.user.company).toBeDefined();
+    });
+
+    it('should return error for invalid email', async () => {
+      const loginData = {
+        email: 'nonexistent@example.com',
+        password: 'password123'
+      };
+
+      const response = await request(app)
+        .post('/api/users/login')
+        .send(loginData)
+        .expect(401);
+
+      expect(response.body.message).toBe('Invalid credentials');
+    });
+
+    it('should return error for invalid password', async () => {
+      const loginData = {
+        email: 'test@example.com',
+        password: 'wrongpassword'
+      };
+
+      const response = await request(app)
+        .post('/api/users/login')
+        .send(loginData)
+        .expect(401);
+
+      expect(response.body.message).toBe('Invalid credentials');
+    });
+
+    it('should include company information in response', async () => {
+      const loginData = {
+        email: 'test@example.com',
+        password: 'password123'
+      };
+
+      const response = await request(app)
+        .post('/api/users/login')
+        .send(loginData)
+        .expect(200);
+
+      expect(response.body.user.company).toBeDefined();
     });
   });
 });
