@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api, { companyAPI } from '../../services/api';
+import './PlatformAdmin.css';
 
 interface Company {
   _id: string;
@@ -621,7 +622,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="platform-admin">
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

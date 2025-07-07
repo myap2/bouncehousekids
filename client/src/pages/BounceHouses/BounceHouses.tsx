@@ -45,7 +45,7 @@ function BounceHouses() {
   const fetchBounceHouses = async () => {
     try {
       const res = await bounceHouseAPI.getAll();
-      setBounceHouses(res.data);
+      setBounceHouses(Array.isArray(res.data.bounceHouses) ? res.data.bounceHouses : []);
     } catch (err) {
       setBounceHouses([]);
     }
@@ -128,6 +128,17 @@ function BounceHouses() {
     setIsUploading(false);
   };
 
+  const handleDeleteBounceHouse = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) return;
+    try {
+      await bounceHouseAPI.delete(id);
+      fetchBounceHouses();
+      alert('Bounce house deleted.');
+    } catch (err: any) {
+      alert('Failed to delete bounce house: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   return (
     <div className="bounce-houses">
       <div className="search-filters">
@@ -150,9 +161,11 @@ function BounceHouses() {
           ))}
         </div>
         {/* Admin-only: Add Bounce House button */}
-        <button className="add-bounce-house-btn" onClick={() => setShowAddModal(true)}>
-          + Add Bounce House
-        </button>
+        {user && (user.role === 'admin' || user.role === 'company-admin') && (
+          <button className="add-bounce-house-btn" onClick={() => setShowAddModal(true)}>
+            + Add Bounce House
+          </button>
+        )}
       </div>
 
       {/* Add Bounce House Modal */}
@@ -300,17 +313,32 @@ function BounceHouses() {
 
       <div className="bounce-houses-grid">
         {filteredHouses.map(house => (
-          <Link to={`/bounce-houses/${house._id}`} key={house._id} className="bounce-house-card">
-            <div className="bounce-house-image">
-              <img src={house.images[0]} alt={house.name} />
-            </div>
-            <div className="bounce-house-info">
-              <h3>{house.name}</h3>
-              <p className="theme">{house.theme}</p>
-              <p className="capacity">{house.capacity.maxOccupants} kids</p>
-              <p className="price">${house.price.daily}/day</p>
-            </div>
-          </Link>
+          <div key={house._id} className="bounce-house-card">
+            <Link to={`/bounce-houses/${house._id}`} style={{ display: 'block' }}>
+              <div className="bounce-house-image">
+                <img src={house.images[0]} alt={house.name} />
+              </div>
+              <div className="bounce-house-info">
+                <h3>{house.name}</h3>
+                <p className="theme">{house.theme}</p>
+                <p className="capacity">{house.capacity.maxOccupants} kids</p>
+                <p className="price">${house.price.daily}/day</p>
+              </div>
+            </Link>
+            {/* Admin-only: Delete button */}
+            {user && (user.role === 'admin' || user.role === 'company-admin') && (
+              <button
+                className="delete-bounce-house-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteBounceHouse(house._id, house.name);
+                }}
+                style={{ margin: '0.5rem', color: 'white', background: '#dc3545', border: 'none', borderRadius: '4px', padding: '0.4rem 0.8rem', cursor: 'pointer' }}
+              >
+                Delete
+              </button>
+            )}
+          </div>
         ))}
       </div>
     </div>
