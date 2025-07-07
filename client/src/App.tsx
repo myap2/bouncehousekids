@@ -9,6 +9,10 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import BounceHouseDetail from './pages/BounceHouseDetail/BounceHouseDetail';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import Contact from './components/Contact';
+import FAQ from './components/FAQ';
+import About from './components/About';
+import WaiverForm from './components/WaiverForm/WaiverForm';
 
 // Placeholder components - we'll create these next
 const Bookings = () => <div>Bookings Page</div>;
@@ -26,6 +30,10 @@ function App() {
             <Route path="/bounce-houses/:id" element={<BounceHouseDetail />} />
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/waiver" element={<WaiverForm />} />
           </Routes>
         </Layout>
       </Router>

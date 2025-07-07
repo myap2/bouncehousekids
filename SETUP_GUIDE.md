@@ -1,6 +1,6 @@
-# 🎉 Bounce House Kids - Complete Setup Guide
+# 🎉 My Bounce Place - Complete Setup Guide
 
-Welcome to Bounce House Kids! This guide will help you get your bounce house rental business up and running quickly.
+Welcome to My Bounce Place! This guide will help you get your bounce house rental business up and running quickly.
 
 ## 🎯 What You're Getting
 

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 interface WaiverFormProps {
-  onWaiverSigned: (waiverId: string) => void;
+  onWaiverSigned?: (waiverId: string) => void;
   bookingId?: string;
   participantName?: string;
 }
@@ -14,8 +14,6 @@ interface WaiverData {
   parentGuardianEmail: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
-  medicalConditions: string;
-  allergies: string;
   agreedTerms: boolean;
   signature: string;
   witnessName?: string;
@@ -33,6 +31,7 @@ const WaiverForm: React.FC<WaiverFormProps> = ({
   const [isWitnessDrawing, setIsWitnessDrawing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [waiverTemplate, setWaiverTemplate] = useState<any>(null);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
   
   const [formData, setFormData] = useState<WaiverData>({
     participantName: initialParticipantName,
@@ -41,8 +40,6 @@ const WaiverForm: React.FC<WaiverFormProps> = ({
     parentGuardianEmail: '',
     emergencyContactName: '',
     emergencyContactPhone: '',
-    medicalConditions: '',
-    allergies: '',
     agreedTerms: false,
     signature: '',
     witnessName: '',
@@ -245,7 +242,7 @@ const WaiverForm: React.FC<WaiverFormProps> = ({
         booking: bookingId
       });
 
-      onWaiverSigned(response.data.waiver._id);
+      if (onWaiverSigned) onWaiverSigned(response.data.waiver._id);
     } catch (error: any) {
       console.error('Error submitting waiver:', error);
       
@@ -264,18 +261,37 @@ const WaiverForm: React.FC<WaiverFormProps> = ({
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Liability Waiver</h2>
-      
-      {waiverTemplate && (
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold mb-4">Waiver Agreement</h3>
-          <div className="bg-gray-50 p-4 rounded-md max-h-64 overflow-y-auto">
-            <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-              {waiverTemplate.waiverText}
-            </pre>
+      <div style={{ marginBottom: '1rem' }}>
+        <button type="button" onClick={() => setShowAgreementModal(true)} style={{ color: '#007bff', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          View Waiver Agreement
+        </button>
+      </div>
+      {showAgreementModal && waiverTemplate && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: '2rem', borderRadius: 8, maxWidth: 600, maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
+            <button onClick={() => setShowAgreementModal(false)} style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>&times;</button>
+            <h3 className="text-lg font-semibold mb-4">Waiver Agreement</h3>
+            <div className="bg-gray-50 p-4 rounded-md max-h-64 overflow-y-auto">
+              <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                {waiverTemplate?.waiverText || `
+BOUNCE HOUSE LIABILITY WAIVER
+
+I, the undersigned, acknowledge and fully understand that participation in bounce house activities involves risks of injury. I agree to assume all risks and hazards incidental to such participation, including but not limited to physical injury, property damage, or loss.
+
+I hereby release, waive, discharge, and covenant not to sue My Bounce Place, its owners, employees, and agents from any and all liability, claims, demands, actions, and causes of action whatsoever arising out of or related to any loss, damage, or injury that may be sustained while using the bounce house equipment.
+
+I certify that I am at least 18 years of age (or the parent/guardian of the participant) and have read and voluntarily sign this waiver and release of liability.
+
+Date: ________________
+Participant Name: __________________________
+Signature: _________________________________
+`}
+              </pre>
+            </div>
           </div>
         </div>
       )}
-
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Participant Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -394,37 +410,6 @@ const WaiverForm: React.FC<WaiverFormProps> = ({
             {errors.emergencyContactPhone && (
               <p className="text-red-500 text-sm mt-1">{errors.emergencyContactPhone}</p>
             )}
-          </div>
-        </div>
-
-        {/* Medical Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Medical Conditions
-            </label>
-            <textarea
-              name="medicalConditions"
-              value={formData.medicalConditions}
-              onChange={handleInputChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Any medical conditions we should be aware of..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Allergies
-            </label>
-            <textarea
-              name="allergies"
-              value={formData.allergies}
-              onChange={handleInputChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Any allergies we should be aware of..."
-            />
           </div>
         </div>
 

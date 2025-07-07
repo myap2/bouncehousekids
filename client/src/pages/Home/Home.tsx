@@ -7,7 +7,7 @@ const Home: React.FC = () => {
     <div className="home">
       <section className="hero" style={{ background: 'linear-gradient(45deg, #007bff, #00bcd4)' }}>
         <div className="hero-content">
-          <h1>Welcome to Bounce House Kids</h1>
+          <h1>Welcome to {process.env.REACT_APP_APP_NAME}</h1>
           <p>Make your next event unforgettable with our premium bounce house rentals!</p>
           <Link to="/bounce-houses" className="hero-button">
             Browse Our Collection
@@ -17,6 +17,11 @@ const Home: React.FC = () => {
 
       <section className="features">
         <h2>Why Choose Us?</h2>
+        <div style={{ marginBottom: '1rem' }}>
+          <Link to="/contact" className="hero-button" style={{ background: '#00bcd4', color: '#fff', marginTop: '1rem' }}>
+            Contact Us
+          </Link>
+        </div>
         <div className="features-grid">
           <div className="feature-card">
             <h3>Premium Quality</h3>
