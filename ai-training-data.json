@@ -171,5 +171,57 @@
         "late_pickup": "$25 per hour after scheduled time",
         "cleaning_fee": "$50 (if excessive dirt/damage)",
         "security_deposit": "$100 (refundable, returned after inspection)"
+    },
+    "blog": {
+        "articles": [
+            {
+                "title": "Essential Bounce House Rental Best Practices for a Safe and Fun Party",
+                "category": "Safety & Best Practices",
+                "date": "2024-12-26",
+                "topics": [
+                    "Size and location planning",
+                    "Weather considerations",
+                    "Adult supervision requirements",
+                    "Age-appropriate play guidelines",
+                    "Proper attire recommendations",
+                    "Emergency preparedness",
+                    "Cleanup and maintenance",
+                    "Communication with rental company"
+                ],
+                "key_points": [
+                    "Choose appropriate size and ensure 10 feet clearance",
+                    "Monitor weather conditions and reschedule if needed",
+                    "Always have adult supervision present",
+                    "Limit to 8 children maximum for safety",
+                    "Remove shoes, jewelry, and sharp objects",
+                    "Keep food and drinks away from bounce house",
+                    "Have emergency contacts readily available"
+                ]
+            },
+            {
+                "title": "What to Do When Storms Threaten Your Bounce House Party",
+                "category": "Weather Safety",
+                "date": "2024-12-26",
+                "topics": [
+                    "Storm prevention and preparation",
+                    "Weather monitoring during setup",
+                    "Immediate evacuation procedures",
+                    "Storm safety guidelines",
+                    "Post-storm safety assessment",
+                    "Rescheduling policies",
+                    "Prevention tips",
+                    "Emergency contact information"
+                ],
+                "key_points": [
+                    "Monitor weather forecasts before events",
+                    "Evacuate immediately when storms approach",
+                    "Contact rental company for weather emergencies",
+                    "Do not attempt to deflate equipment yourself",
+                    "Free rescheduling for weather cancellations",
+                    "Book during May-September for best weather",
+                    "Have backup indoor locations available"
+                ]
+            }
+        ]
     }
 } 

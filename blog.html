@@ -3,203 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - My Bounce Place | Logan Bounce House Rentals</title>
+    <meta name="description" content="Expert tips and advice for bounce house rentals in Logan, Utah. Learn best practices and safety guidelines for your next party.">
+    <meta name="keywords" content="bounce house rental tips, Logan Utah, party safety, bounce house best practices">
     
-    <!-- SEO Meta Tags -->
-    <title>Bounce House Blog - Party Tips, Safety Guides & More | My Bounce Place Logan</title>
-    <meta name="description" content="Expert tips on bounce house safety, party planning, and event ideas. Your go-to resource for bounce house rentals in Logan, Utah and Cache Valley.">
-    <meta name="keywords" content="bounce house safety, party planning tips, birthday party ideas, bounce house blog, logan utah events">
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Bounce House Blog - Party Tips & Safety Guides">
-    <meta property="og:description" content="Expert tips on bounce house safety, party planning, and event ideas for Logan, Utah.">
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://mybounceplace.com/blog.html">
-    <meta property="og:image" content="images/princess-castle-1.jpg">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    
-    <!-- Styles -->
+    <meta property="og:title" content="Blog - My Bounce Place | Logan Bounce House Rentals">
+    <meta property="og:description" content="Expert tips and advice for bounce house rentals in Logan, Utah. Learn best practices and safety guidelines for your next party.">
+    <meta property="og:image" content="https://mybounceplace.com/images/princess-castle-1.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://mybounceplace.com/blog.html">
+    <meta property="twitter:title" content="Blog - My Bounce Place | Logan Bounce House Rentals">
+    <meta property="twitter:description" content="Expert tips and advice for bounce house rentals in Logan, Utah. Learn best practices and safety guidelines for your next party.">
+    <meta property="twitter:image" content="https://mybounceplace.com/images/princess-castle-1.jpg">
+
     <link rel="stylesheet" href="css/styles.css">
-    
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-XXXXXXXXXX');
-    </script>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
 </head>
 <body>
     <!-- Navigation -->
-    <nav style="background: #007bff; padding: 1rem; position: sticky; top: 0; z-index: 1000;">
-        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <a href="index.html" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: bold;">My Bounce Place</a>
-            <div style="display: flex; gap: 2rem;">
-                <a href="index.html" style="color: white; text-decoration: none;">Home</a>
-                <a href="index.html#bounce-houses" style="color: white; text-decoration: none;">Bounce Houses</a>
-                <a href="index.html#pricing" style="color: white; text-decoration: none;">Pricing</a>
-                <a href="index.html#contact" style="color: white; text-decoration: none;">Contact</a>
-                <a href="blog.html" style="color: white; text-decoration: none; font-weight: bold;">Blog</a>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand-link">
+                <div class="nav-brand">
+                    <h1>My Bounce Place</h1>
+                </div>
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#bounce-houses" class="nav-link">Bounce Houses</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#contact" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#pricing" class="nav-link">Pricing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#faq" class="nav-link">FAQ</a>
+                </li>
+                <li class="nav-item">
+                    <a href="blog.html" class="nav-link active" target="_self">Blog</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
             </div>
         </div>
     </nav>
 
     <!-- Blog Header -->
-    <header style="background: linear-gradient(135deg, #007bff, #00bcd4); color: white; padding: 4rem 2rem; text-align: center;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h1>Bounce House Blog</h1>
-            <p style="font-size: 1.2rem; margin-top: 1rem;">Expert tips, safety guides, and party planning ideas for bounce house rentals in Logan, Utah</p>
+    <section class="blog-header">
+        <div class="container">
+            <h1>Bounce House Rental Blog</h1>
+            <p>Expert tips, safety guidelines, and best practices for your perfect party</p>
         </div>
-    </header>
+    </section>
 
-    <!-- Blog Content -->
-    <main style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
-        <!-- Featured Article -->
-        <article style="background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 3rem; overflow: hidden;">
-            <img src="images/princess-castle-1.jpg" alt="Bounce House Safety Tips" style="width: 100%; height: 300px; object-fit: cover;">
-            <div style="padding: 2rem;">
-                <div style="color: #007bff; font-size: 0.9rem; margin-bottom: 1rem;">FEATURED • SAFETY</div>
-                <h2 style="margin-bottom: 1rem;">Essential Bounce House Safety Tips for Parents</h2>
-                <p style="color: #666; margin-bottom: 1rem;">Published: December 26, 2024 • 5 min read</p>
-                <p style="margin-bottom: 1.5rem;">Keeping children safe while they enjoy bounce house fun is our top priority. Learn the essential safety guidelines every parent should know before renting a bounce house for their event.</p>
-                <a href="#safety-tips" style="color: #007bff; text-decoration: none; font-weight: bold;">Read More →</a>
-            </div>
-        </article>
-
-        <!-- Blog Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
-            
-            <!-- Article 1 -->
-            <article style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                <img src="images/jungle-adventure-1.jpg" alt="Birthday Party Planning" style="width: 100%; height: 200px; object-fit: cover;">
-                <div style="padding: 1.5rem;">
-                    <div style="color: #007bff; font-size: 0.9rem; margin-bottom: 0.5rem;">PARTY PLANNING</div>
-                    <h3 style="margin-bottom: 1rem;">10 Amazing Birthday Party Themes for Bounce House Events</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">December 24, 2024 • 3 min read</p>
-                    <p style="margin-bottom: 1rem;">Transform your bounce house party into an unforgettable adventure with these creative theme ideas perfect for Logan, Utah celebrations.</p>
-                    <a href="#party-themes" style="color: #007bff; text-decoration: none; font-weight: bold;">Read More →</a>
-                </div>
-            </article>
-
-            <!-- Article 2 -->
-            <article style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                <img src="images/sports-arena-1.jpg" alt="Weather Considerations" style="width: 100%; height: 200px; object-fit: cover;">
-                <div style="padding: 1.5rem;">
-                    <div style="color: #007bff; font-size: 0.9rem; margin-bottom: 0.5rem;">WEATHER</div>
-                    <h3 style="margin-bottom: 1rem;">Weather-Proofing Your Bounce House Event in Cache Valley</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">December 22, 2024 • 4 min read</p>
-                    <p style="margin-bottom: 1rem;">Utah weather can be unpredictable. Learn how to plan for weather contingencies and ensure your bounce house event goes smoothly.</p>
-                    <a href="#weather-proofing" style="color: #007bff; text-decoration: none; font-weight: bold;">Read More →</a>
-                </div>
-            </article>
-
-            <!-- Article 3 -->
-            <article style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                <img src="images/superhero-arena-1.jpg" alt="Event Planning" style="width: 100%; height: 200px; object-fit: cover;">
-                <div style="padding: 1.5rem;">
-                    <div style="color: #007bff; font-size: 0.9rem; margin-bottom: 0.5rem;">EVENT PLANNING</div>
-                    <h3 style="margin-bottom: 1rem;">Complete Guide to Planning a School Event with Bounce Houses</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">December 20, 2024 • 6 min read</p>
-                    <p style="margin-bottom: 1rem;">From fundraising events to end-of-year celebrations, discover how to successfully incorporate bounce houses into school events.</p>
-                    <a href="#school-events" style="color: #007bff; text-decoration: none; font-weight: bold;">Read More →</a>
-                </div>
-            </article>
-
-            <!-- Article 4 -->
-            <article style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                <img src="images/pirate-ship-1.jpg" alt="Maintenance Tips" style="width: 100%; height: 200px; object-fit: cover;">
-                <div style="padding: 1.5rem;">
-                    <div style="color: #007bff; font-size: 0.9rem; margin-bottom: 0.5rem;">MAINTENANCE</div>
-                    <h3 style="margin-bottom: 1rem;">How We Keep Our Bounce Houses Clean and Safe</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">December 18, 2024 • 4 min read</p>
-                    <p style="margin-bottom: 1rem;">Learn about our rigorous cleaning and maintenance procedures that ensure every bounce house rental is safe and hygienic.</p>
-                    <a href="#maintenance" style="color: #007bff; text-decoration: none; font-weight: bold;">Read More →</a>
-                </div>
-            </article>
-
-            <!-- Article 5 -->
-            <article style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                <img src="images/space-adventure-1.jpg" alt="Cost Savings" style="width: 100%; height: 200px; object-fit: cover;">
-                <div style="padding: 1.5rem;">
-                    <div style="color: #007bff; font-size: 0.9rem; margin-bottom: 0.5rem;">COST SAVINGS</div>
-                    <h3 style="margin-bottom: 1rem;">Budget-Friendly Bounce House Party Ideas for Logan Families</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">December 16, 2024 • 5 min read</p>
-                    <p style="margin-bottom: 1rem;">Create an amazing bounce house party without breaking the bank. Tips and tricks for budget-conscious families in Cache Valley.</p>
-                    <a href="#budget-tips" style="color: #007bff; text-decoration: none; font-weight: bold;">Read More →</a>
-                </div>
-            </article>
-
-            <!-- Article 6 -->
-            <article style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                <img src="images/princess-castle-1.jpg" alt="Local Events" style="width: 100%; height: 200px; object-fit: cover;">
-                <div style="padding: 1.5rem;">
-                    <div style="color: #007bff; font-size: 0.9rem; margin-bottom: 0.5rem;">LOCAL EVENTS</div>
-                    <h3 style="margin-bottom: 1rem;">Top Summer Events in Cache Valley Perfect for Bounce Houses</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">December 14, 2024 • 4 min read</p>
-                    <p style="margin-bottom: 1rem;">Discover the best summer events and festivals in Logan and surrounding areas where bounce houses add extra fun.</p>
-                    <a href="#summer-events" style="color: #007bff; text-decoration: none; font-weight: bold;">Read More →</a>
-                </div>
-            </article>
-        </div>
-
-        <!-- Newsletter Signup -->
-        <div style="background: linear-gradient(135deg, #007bff, #00bcd4); color: white; padding: 3rem; border-radius: 10px; text-align: center; margin: 3rem 0;">
-            <h2 style="margin-bottom: 1rem;">Stay Updated with Our Latest Tips!</h2>
-            <p style="margin-bottom: 2rem;">Get exclusive party planning tips, safety updates, and special offers delivered to your inbox.</p>
-            <form style="display: flex; gap: 1rem; max-width: 500px; margin: 0 auto; flex-wrap: wrap;">
-                <input type="email" placeholder="Enter your email" style="flex: 1; padding: 0.75rem; border: none; border-radius: 5px; min-width: 200px;">
-                <button type="submit" style="background: white; color: #007bff; border: none; padding: 0.75rem 1.5rem; border-radius: 5px; font-weight: bold; cursor: pointer;">Subscribe</button>
-            </form>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer style="background: #333; color: white; padding: 2rem; margin-top: 2rem;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                <div>
-                    <h3>My Bounce Place - Logan, Utah</h3>
-                    <p>Premier bounce house rentals in Logan, Utah and surrounding areas. Expert tips and guides for safe, fun events.</p>
-                    <p><strong>Phone:</strong> <a href="tel:+13852888065" style="color: white; text-decoration: none;">(385) 288-8065</a></p>
-                    <p><strong>Email:</strong> <a href="mailto:noreply@mybounceplace.com" style="color: white; text-decoration: none;">noreply@mybounceplace.com</a></p>
-                </div>
-                <div>
-                    <h4>Blog Categories</h4>
-                    <ul style="list-style: none; padding: 0;">
-                        <li>• Safety Tips & Guidelines</li>
-                        <li>• Party Planning Ideas</li>
-                        <li>• Event Planning Guides</li>
-                        <li>• Local Event Highlights</li>
-                        <li>• Maintenance & Care</li>
-                        <li>• Cost-Saving Tips</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4>Follow Us</h4>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <a href="https://www.facebook.com/mybounceplace" target="_blank" rel="noopener" style="color: white; text-decoration: none; font-size: 1.5rem;" title="Follow us on Facebook">
-                            📘 Facebook
-                        </a>
-                        <a href="https://www.instagram.com/mybounceplace" target="_blank" rel="noopener" style="color: white; text-decoration: none; font-size: 1.5rem;" title="Follow us on Instagram">
-                            📷 Instagram
-                        </a>
+    <!-- Blog Posts -->
+    <section class="blog-posts">
+        <div class="container">
+            <!-- Blog Post 1 -->
+            <article class="blog-post">
+                <div class="blog-post-header">
+                    <h2>Essential Bounce House Rental Best Practices for a Safe and Fun Party</h2>
+                    <div class="blog-meta">
+                        <span class="blog-date">December 26, 2024</span>
+                        <span class="blog-category">Safety & Best Practices</span>
                     </div>
                 </div>
-            </div>
-            <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #555;">
-                <p>&copy; 2024 My Bounce Place. Premier bounce house rentals in Logan, Utah.</p>
-                <div style="margin-top: 1rem;">
-                    <a href="privacy-policy.html" style="color: white; text-decoration: none; margin: 0 1rem;">Privacy Policy</a>
-                    <a href="terms-of-service.html" style="color: white; text-decoration: none; margin: 0 1rem;">Terms of Service</a>
+                
+                <div class="blog-content">
+                    <p>Planning a bounce house rental for your next party in Logan, Utah? Follow these essential best practices to ensure everyone has a safe and enjoyable experience.</p>
+                    
+                    <h3>1. Choose the Right Size and Location</h3>
+                    <p>Before booking your bounce house, consider the number of guests and available space. Our "Bounce Castle with a Slide" accommodates up to 8 children at once. Ensure you have at least 10 feet of clearance on all sides for safe setup and access.</p>
+                    
+                    <h3>2. Weather Considerations</h3>
+                    <p>Always check the weather forecast before your rental date. Bounce houses should not be used in winds exceeding 20 mph or during rain. We monitor weather conditions and will work with you to reschedule if needed for safety.</p>
+                    
+                    <h3>3. Adult Supervision is Essential</h3>
+                    <p>Never leave children unattended in a bounce house. Designate at least one responsible adult to supervise at all times. This person should:</p>
+                    <ul>
+                        <li>Monitor the number of children inside (max 8 for our castle)</li>
+                        <li>Ensure children remove shoes, jewelry, and sharp objects</li>
+                        <li>Prevent rough play, climbing on walls, or flips</li>
+                        <li>Keep food and drinks away from the bounce house</li>
+                    </ul>
+                    
+                    <h3>4. Age-Appropriate Play</h3>
+                    <p>Our bounce house is designed for children ages 3-12. Younger children should be supervised more closely, and we recommend separating very young children from older ones to prevent accidents.</p>
+                    
+                    <h3>5. Proper Attire</h3>
+                    <p>Children should wear comfortable, weather-appropriate clothing. Avoid loose items that could get caught. Socks are recommended for better grip and cleanliness.</p>
+                    
+                    <h3>6. Emergency Preparedness</h3>
+                    <p>Keep a first-aid kit nearby and have emergency contact numbers readily available. Our team provides safety instructions during setup, but it's important to review them with all supervising adults.</p>
+                    
+                    <h3>7. Cleanup and Maintenance</h3>
+                    <p>During the rental period, keep the bounce house clean by removing any debris that enters. We handle all setup, takedown, and cleaning, but maintaining cleanliness during use helps ensure everyone's safety.</p>
+                    
+                    <h3>8. Communication with Rental Company</h3>
+                    <p>At My Bounce Place, we're here to help! Contact us immediately if you notice any issues with the equipment or have safety concerns. Our team is available throughout your rental period for support.</p>
+                    
+                    <p><strong>Ready to book your safe and fun bounce house rental?</strong> Contact Michael at (385) 288-8065 to reserve your date and discuss any specific safety requirements for your event.</p>
+                    
+                    <p><strong>Don't forget:</strong> All participants must sign a waiver. <a href="waiver-print.html" target="_blank">Print our waiver here</a> to have it ready for your event.</p>
                 </div>
+            </article>
+
+            <!-- Blog Post 2 -->
+            <article class="blog-post">
+                <div class="blog-post-header">
+                    <h2>What to Do When Storms Threaten Your Bounce House Party</h2>
+                    <div class="blog-meta">
+                        <span class="blog-date">December 26, 2024</span>
+                        <span class="blog-category">Weather Safety</span>
+                    </div>
+                </div>
+                
+                <div class="blog-content">
+                    <p>In Cache Valley, weather can change quickly. Here's your complete guide to handling stormy weather during your bounce house rental to keep everyone safe.</p>
+                    
+                    <h3>Before the Storm: Prevention and Preparation</h3>
+                    <p>Monitor weather forecasts in the days leading up to your event. If severe weather is predicted, we'll contact you to discuss options. It's always better to reschedule than to risk safety.</p>
+                    
+                    <h3>During Setup: Weather Monitoring</h3>
+                    <p>Our team monitors weather conditions during setup. If conditions become unsafe, we may delay or cancel setup. We'll communicate clearly about any changes and work with you to find the best solution.</p>
+                    
+                    <h3>When Storms Approach: Immediate Actions</h3>
+                    <p>If you notice storm conditions developing during your rental:</p>
+                    <ol>
+                        <li><strong>Immediately evacuate all children</strong> from the bounce house</li>
+                        <li><strong>Move everyone to a safe indoor location</strong></li>
+                        <li><strong>Contact us immediately</strong> at (385) 288-8065</li>
+                        <li><strong>Do not attempt to deflate or move the equipment</strong> yourself</li>
+                    </ol>
+                    
+                    <h3>Storm Safety Guidelines</h3>
+                    <p>Bounce houses must be evacuated when:</p>
+                    <ul>
+                        <li>Wind speeds exceed 20 mph</li>
+                        <li>Lightning is visible or thunder is heard</li>
+                        <li>Heavy rain or hail is occurring</li>
+                        <li>Any severe weather warnings are issued</li>
+                    </ul>
+                    
+                    <h3>After the Storm: Safety Assessment</h3>
+                    <p>Once the storm passes, our team will assess the equipment before allowing play to resume. This includes:</p>
+                    <ul>
+                        <li>Checking for any damage to the bounce house</li>
+                        <li>Ensuring proper anchoring and stability</li>
+                        <li>Verifying the blower is functioning correctly</li>
+                        <li>Cleaning any debris that may have accumulated</li>
+                    </ul>
+                    
+                    <h3>Rescheduling Due to Weather</h3>
+                    <p>We understand that weather cancellations can be disappointing. Our weather policy includes:</p>
+                    <ul>
+                        <li>Free rescheduling for weather-related cancellations</li>
+                        <li>Full refunds if no suitable reschedule date is available</li>
+                        <li>Flexible booking options for makeup dates</li>
+                        <li>No cancellation fees for weather-related issues</li>
+                    </ul>
+                    
+                    <h3>Prevention Tips</h3>
+                    <p>To minimize weather-related issues:</p>
+                    <ul>
+                        <li>Book your rental for the best weather months (May-September in Logan)</li>
+                        <li>Have a backup indoor location or tent available</li>
+                        <li>Consider morning rentals when weather is typically calmer</li>
+                        <li>Stay in communication with our team about weather concerns</li>
+                    </ul>
+                    
+                    <h3>Emergency Contact Information</h3>
+                    <p>For weather emergencies during your rental:</p>
+                    <ul>
+                        <li><strong>My Bounce Place:</strong> (385) 288-8065</li>
+                        <li><strong>Local Weather Service:</strong> National Weather Service - Salt Lake City</li>
+                        <li><strong>Emergency Services:</strong> 911 (for life-threatening situations)</li>
+                    </ul>
+                    
+                    <p><strong>Remember:</strong> Safety is our top priority. When in doubt about weather conditions, err on the side of caution. We're here to help you make the right decisions for your event.</p>
+                    
+                    <p><strong>Need to discuss weather policies or book with confidence?</strong> Contact Michael at (385) 288-8065 to learn more about our weather safety procedures and flexible booking options.</p>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>My Bounce Place</h3>
+                    <p>Logan's premier bounce house rental service, providing safe and fun entertainment for all your special occasions.</p>
+                    <p><strong>Contact:</strong> Michael Yap<br>
+                    <strong>Phone:</strong> (385) 288-8065</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li>Bounce House Rentals</li>
+                        <li>Birthday Parties</li>
+                        <li>Corporate Events</li>
+                        <li>Community Gatherings</li>
+                        <li>Safe Setup & Takedown</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Service Areas</h4>
+                    <ul>
+                        <li>Logan, Utah</li>
+                        <li>Cache Valley</li>
+                        <li>North Logan</li>
+                        <li>Providence</li>
+                        <li>Hyrum</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="ai-training-data.json">AI Training Data</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 My Bounce Place. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <script src="js/app.js"></script>
+    <script src="js/navigation.js"></script>
 </body>
 </html>
