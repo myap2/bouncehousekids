@@ -12,13 +12,19 @@ class ContactManager {
         this.form = document.getElementById('contact-form');
         if (!this.form) return;
 
+        // Prevent default form submission to avoid redirecting and URL params
         this.form.addEventListener('submit', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.handleSubmit();
+            return false;
         });
 
         // Add input validation listeners
         this.setupInputListeners();
+        
+        // Set minimum date to today
+        this.setupDatePicker();
     }
 
     setupInputListeners() {
@@ -76,6 +82,22 @@ class ContactManager {
                     isValid = false;
                 }
                 break;
+
+            case 'desiredDate':
+                if (!value) {
+                    errorMessage = 'Desired rental date is required';
+                    isValid = false;
+                } else {
+                    const selectedDate = new Date(value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (selectedDate < today) {
+                        errorMessage = 'Please select a future date';
+                        isValid = false;
+                    }
+                }
+                break;
         }
 
         if (!isValid) {
@@ -130,7 +152,7 @@ class ContactManager {
 
     validateForm() {
         const formData = new FormData(this.form);
-        const fields = ['name', 'email', 'message']; // phone is optional
+        const fields = ['name', 'email', 'desiredDate', 'message']; // phone is optional
         let isValid = true;
 
         fields.forEach(fieldName => {
@@ -157,6 +179,7 @@ class ContactManager {
             name: formData.get('name')?.trim() || '',
             email: formData.get('email')?.trim() || '',
             phone: formData.get('phone')?.trim() || '',
+            desiredDate: formData.get('desiredDate') || '',
             message: formData.get('message')?.trim() || '',
             timestamp: new Date().toISOString()
         };
@@ -171,6 +194,15 @@ class ContactManager {
         // Collect form data
         const data = this.collectFormData();
 
+        // Prevent any URL changes
+        const currentUrl = window.location.href;
+        const urlObserver = () => {
+            if (window.location.href !== currentUrl) {
+                window.history.replaceState(null, null, currentUrl);
+            }
+        };
+        window.addEventListener('popstate', urlObserver);
+
         // Disable submit button
         const submitBtn = this.form.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
@@ -178,32 +210,49 @@ class ContactManager {
         submitBtn.textContent = 'Sending...';
 
         try {
-            // Since this is a static site, we'll save to localStorage and show success
-            // In a real implementation, you might integrate with a service like Formspree or EmailJS
+            // Submit to Formspree
+            const formData = new FormData(this.form);
             
-            // Save message to localStorage
-            const existingMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
-            const messageId = 'msg_' + Date.now();
-            existingMessages.push({
-                id: messageId,
-                ...data
+            // Add hidden fields for better email formatting
+            formData.append('_subject', `Bounce House Rental Request - ${data.name}`);
+            formData.append('_replyto', data.email);
+            
+            const response = await fetch('https://formspree.io/f/mgvzkqgp', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
             });
-            localStorage.setItem('contactMessages', JSON.stringify(existingMessages));
 
-            // Show success message
-            this.showSuccess(data);
+            if (response.ok) {
+                // Also save to localStorage for backup
+                const existingMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
+                const messageId = 'msg_' + Date.now();
+                existingMessages.push({
+                    id: messageId,
+                    ...data
+                });
+                localStorage.setItem('contactMessages', JSON.stringify(existingMessages));
 
-            // Reset form
-            this.form.reset();
-            
-            // Clear any remaining field errors
-            const errorElements = this.form.querySelectorAll('.field-error');
-            errorElements.forEach(el => el.remove());
-            
-            const fields = this.form.querySelectorAll('input, textarea');
-            fields.forEach(field => {
-                field.style.borderColor = '';
-            });
+                // Show inline success message
+                this.showInlineSuccess(data);
+
+                // Reset form
+                this.form.reset();
+                
+                // Clear any remaining field errors
+                const errorElements = this.form.querySelectorAll('.field-error');
+                errorElements.forEach(el => el.remove());
+                
+                const fields = this.form.querySelectorAll('input, textarea');
+                fields.forEach(field => {
+                    field.style.borderColor = '';
+                });
+            } else {
+                console.error('Form submission failed:', response.status, response.statusText);
+                throw new Error('Form submission failed');
+            }
 
         } catch (error) {
             console.error('Error submitting contact form:', error);
@@ -212,6 +261,9 @@ class ContactManager {
             // Re-enable submit button
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
+            
+            // Clean up URL observer
+            window.removeEventListener('popstate', urlObserver);
         }
     }
 
@@ -222,15 +274,42 @@ class ContactManager {
         if (modal && message) {
             message.innerHTML = `
                 <strong>Message Sent Successfully!</strong><br><br>
-                Thank you, ${data.name}! We've received your message and will get back to you soon.<br><br>
+                Thank you, ${data.name}! We've received your rental request for ${data.desiredDate} and will get back to you soon.<br><br>
                 <strong>What happens next:</strong><br>
-                • We'll review your message within 24 hours<br>
+                • We'll review your request within 24 hours<br>
                 • You'll receive a response at ${data.email}<br>
                 • For urgent matters, please call ${companyInfo.phone}<br><br>
                 We appreciate your interest in ${companyInfo.name}!
             `;
             modal.classList.add('show');
         }
+    }
+
+    showInlineSuccess(data) {
+        // Create or update success message container
+        let successContainer = this.form.querySelector('.form-success');
+        
+        if (!successContainer) {
+            successContainer = document.createElement('div');
+            successContainer.className = 'form-success';
+            successContainer.style.cssText = `
+                background: #d4edda;
+                color: #155724;
+                padding: 1rem;
+                border-radius: 5px;
+                margin-bottom: 1rem;
+                border: 1px solid #c3e6cb;
+                text-align: center;
+                font-weight: bold;
+                font-size: 1.1rem;
+            `;
+            this.form.insertBefore(successContainer, this.form.firstChild);
+        }
+        
+        successContainer.innerHTML = `✅ Successfully sent!`;
+        
+        // Scroll to the success message
+        successContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     showError(errorMessage) {
@@ -274,6 +353,24 @@ class ContactManager {
         }
         
         input.value = value;
+    }
+
+    // Setup date picker with minimum date
+    setupDatePicker() {
+        const dateInput = document.getElementById('contact-date');
+        if (dateInput) {
+            // Set minimum date to today
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayString = `${yyyy}-${mm}-${dd}`;
+            
+            dateInput.setAttribute('min', todayString);
+            
+            // Set placeholder text
+            dateInput.setAttribute('placeholder', 'Select your desired rental date');
+        }
     }
 }
 

@@ -17,7 +17,7 @@ class BounceHouseManager {
         
         container.innerHTML = featured.map(house => `
             <div class="bounce-house-card" onclick="showBounceHouseDetail('${house.id}')">
-                <div class="bounce-house-image placeholder">
+                <div class="bounce-house-image">
                     ${house.images[0] ? `<img src="${house.images[0]}" alt="${house.name}" onerror="this.parentElement.classList.add('placeholder'); this.style.display='none';">` : ''}
                 </div>
                 <div class="bounce-house-info">
@@ -38,7 +38,7 @@ class BounceHouseManager {
 
         container.innerHTML = this.filteredHouses.map(house => `
             <div class="bounce-house-card" onclick="showBounceHouseDetail('${house.id}')">
-                <div class="bounce-house-image placeholder">
+                <div class="bounce-house-image">
                     ${house.images[0] ? `<img src="${house.images[0]}" alt="${house.name}" onerror="this.parentElement.classList.add('placeholder'); this.style.display='none';">` : ''}
                 </div>
                 <div class="bounce-house-info">

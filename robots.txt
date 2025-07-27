@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# AI Training Data
+Allow: /ai-training-data.json
+Allow: /ai-training-instructions.md
+
+# Sitemap location
+Sitemap: https://mybounceplace.com/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1 

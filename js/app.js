@@ -7,13 +7,9 @@ class App {
     init() {
         if (this.isInitialized) return;
         
-        console.log('Initializing My Bounce Place application...');
-        
         this.setupGlobalEvents();
         this.loadInitialData();
         this.isInitialized = true;
-        
-        console.log('Application initialized successfully!');
     }
 
     setupGlobalEvents() {
@@ -34,11 +30,11 @@ class App {
 
         // Handle network status changes (for potential future features)
         window.addEventListener('online', () => {
-            console.log('Connection restored');
+            // Connection restored
         });
 
         window.addEventListener('offline', () => {
-            console.log('Connection lost');
+            // Connection lost
         });
     }
 
@@ -74,13 +70,30 @@ class App {
     }
 
     preloadImages() {
-        // Create placeholder images for bounce houses that fail to load
-        const images = document.querySelectorAll('img');
-        images.forEach(img => {
-            if (!img.dataset.errorHandled) {
-                img.addEventListener('error', this.handleImageError);
-                img.dataset.errorHandled = 'true';
-            }
+        // Set up a mutation observer to handle dynamically added images
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const images = node.querySelectorAll ? node.querySelectorAll('img') : [];
+                        if (node.tagName === 'IMG') {
+                            images.push(node);
+                        }
+                        
+                        images.forEach(img => {
+                            if (!img.dataset.errorHandled && img.src.includes('images/')) {
+                                img.addEventListener('error', this.handleImageError);
+                                img.dataset.errorHandled = 'true';
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
         });
     }
 
@@ -91,8 +104,8 @@ class App {
         // Hide the broken image
         img.style.display = 'none';
         
-        // Add placeholder styling to parent
-        if (parent.classList.contains('bounce-house-image')) {
+        // Add placeholder styling to parent only if it's a bounce house image
+        if (parent && parent.classList.contains('bounce-house-image')) {
             parent.classList.add('placeholder');
         }
     }

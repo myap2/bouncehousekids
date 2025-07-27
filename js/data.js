@@ -2,9 +2,9 @@
 const bounceHouses = [
     {
         id: '1',
-        name: 'Princess Castle',
-        description: 'A magical princess-themed bounce house perfect for making your little princess feel special. Features beautiful pink and purple colors with castle turrets and royal decorations.',
-        theme: 'Princess',
+        name: 'Bounce Castle with a Slide',
+        description: 'A fantastic bounce castle perfect for all kids! Features a fun slide, bright colors, and plenty of bouncing space for hours of entertainment.',
+        theme: 'Castle',
         dimensions: {
             length: 15,
             width: 15,
@@ -22,8 +22,7 @@ const bounceHouses = [
             weekend: 200
         },
         images: [
-            'images/princess-castle-1.jpg',
-            'images/princess-castle-2.jpg'
+            'images/princess-castle-1.jpg'
         ],
         features: [
             'Slide included',
@@ -33,187 +32,17 @@ const bounceHouses = [
         ],
         rating: 4.8,
         isActive: true
-    },
-    {
-        id: '2',
-        name: 'Superhero Arena',
-        description: 'Action-packed superhero themed bounce house featuring your favorite comic book heroes. Perfect for superhero birthday parties and adventures.',
-        theme: 'Superhero',
-        dimensions: {
-            length: 18,
-            width: 15,
-            height: 14
-        },
-        capacity: {
-            minAge: 4,
-            maxAge: 14,
-            maxWeight: 180,
-            maxOccupants: 10
-        },
-        price: {
-            daily: 175,
-            weekly: 900,
-            weekend: 225
-        },
-        images: [
-            'images/superhero-arena-1.jpg',
-            'images/superhero-arena-2.jpg'
-        ],
-        features: [
-            'Double slide',
-            'Obstacle course',
-            'Climbing wall',
-            'Superhero graphics'
-        ],
-        rating: 4.9,
-        isActive: true
-    },
-    {
-        id: '3',
-        name: 'Jungle Adventure',
-        description: 'Wild jungle-themed bounce house with animal decorations and tropical colors. Great for animal lovers and safari-themed parties.',
-        theme: 'Jungle',
-        dimensions: {
-            length: 16,
-            width: 16,
-            height: 13
-        },
-        capacity: {
-            minAge: 3,
-            maxAge: 12,
-            maxWeight: 160,
-            maxOccupants: 9
-        },
-        price: {
-            daily: 160,
-            weekly: 850,
-            weekend: 210
-        },
-        images: [
-            'images/jungle-adventure-1.jpg',
-            'images/jungle-adventure-2.jpg'
-        ],
-        features: [
-            'Animal graphics',
-            'Tropical colors',
-            'Safety net enclosure',
-            'Easy setup'
-        ],
-        rating: 4.7,
-        isActive: true
-    },
-    {
-        id: '4',
-        name: 'Pirate Ship Adventure',
-        description: 'Ahoy matey! Set sail on a bouncing adventure with this incredible pirate ship bounce house. Complete with masts, sails, and treasure decorations.',
-        theme: 'Pirate',
-        dimensions: {
-            length: 20,
-            width: 12,
-            height: 15
-        },
-        capacity: {
-            minAge: 4,
-            maxAge: 14,
-            maxWeight: 170,
-            maxOccupants: 8
-        },
-        price: {
-            daily: 180,
-            weekly: 950,
-            weekend: 240
-        },
-        images: [
-            'images/pirate-ship-1.jpg',
-            'images/pirate-ship-2.jpg'
-        ],
-        features: [
-            'Ship design',
-            'Slide as gangplank',
-            'Pirate decorations',
-            'Treasure chest obstacle'
-        ],
-        rating: 4.8,
-        isActive: true
-    },
-    {
-        id: '5',
-        name: 'Sports Arena',
-        description: 'Perfect for sports enthusiasts! This bounce house features basketball hoops, soccer goals, and sports-themed decorations.',
-        theme: 'Sports',
-        dimensions: {
-            length: 18,
-            width: 18,
-            height: 12
-        },
-        capacity: {
-            minAge: 5,
-            maxAge: 16,
-            maxWeight: 200,
-            maxOccupants: 12
-        },
-        price: {
-            daily: 170,
-            weekly: 900,
-            weekend: 220
-        },
-        images: [
-            'images/sports-arena-1.jpg',
-            'images/sports-arena-2.jpg'
-        ],
-        features: [
-            'Basketball hoops',
-            'Soccer goals',
-            'Sports graphics',
-            'Large bouncing area'
-        ],
-        rating: 4.6,
-        isActive: true
-    },
-    {
-        id: '6',
-        name: 'Space Adventure',
-        description: 'Blast off to fun with this space-themed bounce house! Features rockets, planets, and astronaut decorations for an out-of-this-world experience.',
-        theme: 'Space',
-        dimensions: {
-            length: 17,
-            width: 15,
-            height: 14
-        },
-        capacity: {
-            minAge: 4,
-            maxAge: 13,
-            maxWeight: 175,
-            maxOccupants: 9
-        },
-        price: {
-            daily: 165,
-            weekly: 875,
-            weekend: 215
-        },
-        images: [
-            'images/space-adventure-1.jpg',
-            'images/space-adventure-2.jpg'
-        ],
-        features: [
-            'Space theme graphics',
-            'Rocket slide',
-            'Planet decorations',
-            'LED lighting effects'
-        ],
-        rating: 4.9,
-        isActive: true
     }
 ];
 
 // Theme categories for filtering
-const themes = ['All', 'Princess', 'Superhero', 'Jungle', 'Pirate', 'Sports', 'Space'];
+const themes = ['All', 'Castle'];
 
 // Company information
 const companyInfo = {
     name: 'My Bounce Place',
-    phone: '(555) 123-4567',
-    email: 'info@mybounceplace.com',
+    phone: '(385) 288-8065',
+    email: 'noreply@mybounceplace.com',
     hours: 'Monday - Sunday, 8:00 AM - 8:00 PM',
     serviceArea: 'Greater metropolitan area with free delivery and setup within 20 miles'
 };

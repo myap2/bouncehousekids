@@ -15,6 +15,17 @@ class NavigationManager {
             const page = event.state?.page || 'home';
             this.showPage(page, false);
         });
+        
+        // Ensure bounce houses are rendered if we're on that page
+        setTimeout(() => {
+            const activePage = document.querySelector('.page.active');
+            if (activePage && activePage.id === 'bounce-houses-page') {
+                if (window.BounceHouseManager) {
+                    window.BounceHouseManager.renderBounceHouses();
+                    window.BounceHouseManager.setupFilters();
+                }
+            }
+        }, 100);
     }
 
     setupNavLinks() {
@@ -26,22 +37,43 @@ class NavigationManager {
                 this.showPage(page);
             });
         });
+        
+        // Setup brand link
+        const brandLink = document.querySelector('.nav-brand-link');
+        if (brandLink) {
+            brandLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showPage('home');
+            });
+        }
     }
 
     setupInitialPage() {
         // Check URL hash for initial page
         const hash = window.location.hash.substring(1);
-        const page = hash || 'home';
+        let page = hash || 'home';
+        
+        // If no hash, try to detect current page from DOM
+        if (!hash) {
+            const activePage = document.querySelector('.page.active');
+            if (activePage) {
+                const pageId = activePage.id;
+                if (pageId) {
+                    page = pageId.replace('-page', '');
+                }
+            }
+        }
+        
         this.showPage(page, false);
     }
 
-    showPage(pageName, updateHistory = true) {
+        showPage(pageName, updateHistory = true) {
         // Hide all pages
         const pages = document.querySelectorAll('.page');
         pages.forEach(page => {
             page.classList.remove('active');
         });
-
+        
         // Show target page
         const targetPage = document.getElementById(`${pageName}-page`);
         if (targetPage) {
@@ -97,6 +129,9 @@ class NavigationManager {
                 if (window.ContactManager) {
                     window.ContactManager.init();
                 }
+                break;
+            case 'pricing':
+                // Pricing page doesn't need special initialization
                 break;
         }
     }

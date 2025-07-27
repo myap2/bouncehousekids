@@ -233,7 +233,6 @@ class WaiverManager {
         if (selectedHouse) {
             const house = JSON.parse(selectedHouse);
             // You could pre-fill participant name or show which bounce house they're signing for
-            console.log('Waiver for bounce house:', house.name);
         }
     }
 
