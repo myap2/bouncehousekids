@@ -136,8 +136,8 @@ class BookingSystem {
     }
 
     async sendBookingEmail(bookingData) {
-        // Use Freeform for booking submissions (same as contact form)
-        return this.sendViaFreeform(bookingData);
+        // Use Formspree for booking submissions (same as contact form)
+        return this.sendViaFormspree(bookingData);
     }
 
     async sendViaEmailJS(bookingData) {
@@ -163,8 +163,7 @@ class BookingSystem {
         );
     }
 
-    async sendViaFreeform(bookingData) {
-        // Use the same Freeform endpoint as your contact form
+    async sendViaFormspree(bookingData) {
         const formData = new FormData();
         
         // Add all booking data to form
@@ -172,12 +171,12 @@ class BookingSystem {
             formData.append(key, bookingData[key]);
         });
 
-        // Add form type identifier for Freeform
+        // Add form type identifier for Formspree
         formData.append('form_type', 'booking_request');
         formData.append('subject', `New Bounce House Booking - ${bookingData.name}`);
 
-        // Use your existing Freeform endpoint
-        const response = await fetch('/freeform/submit', { // Update this to your actual Freeform endpoint
+        // Use your existing Formspree endpoint (same as contact form)
+        const response = await fetch('https://formspree.io/f/mgvzkqgp', {
             method: 'POST',
             body: formData,
             headers: {
