@@ -2,8 +2,8 @@
 const bounceHouses = [
     {
         id: '1',
-        name: 'Bounce Castle with a Slide',
-        description: 'A fantastic bounce castle perfect for all kids! Features a fun slide, bright colors, and plenty of bouncing space for hours of entertainment.',
+        name: 'Princess Castle Bounce House with Slide',
+        description: 'Our beautiful princess castle bounce house is perfect for birthday parties and special events! Features a fun slide, bright pink and purple colors, and plenty of bouncing space for hours of entertainment. This castle-themed bounce house creates a magical experience that kids absolutely love.',
         theme: 'Castle',
         dimensions: {
             length: 15,
@@ -25,13 +25,20 @@ const bounceHouses = [
             'images/princess-castle-1.jpg'
         ],
         features: [
-            'Slide included',
-            'Basketball hoop',
-            'Mesh safety walls',
-            'Anchor points included'
+            'Fun slide included',
+            'Basketball hoop for extra fun',
+            'Mesh safety walls for visibility',
+            'Anchor points and stakes included',
+            'Commercial-grade blower',
+            'Extension cords provided',
+            'Easy setup and takedown',
+            'Perfect for 3-12 year olds'
         ],
         rating: 4.8,
-        isActive: true
+        isActive: true,
+        availability: 'Available for booking 7 days a week',
+        setupTime: '30-45 minutes',
+        spaceRequired: '20ft x 20ft minimum area'
     }
 ];
 
@@ -44,18 +51,22 @@ const companyInfo = {
     phone: '(385) 288-8065',
     email: 'noreply@mybounceplace.com',
     hours: 'Monday - Sunday, 8:00 AM - 8:00 PM',
-    serviceArea: 'Greater metropolitan area with free delivery and setup within 20 miles'
+    serviceArea: 'Logan, Utah and surrounding areas with free delivery and setup within 20 miles',
+    speciality: 'Princess Castle Bounce House Rentals',
+    established: '2024',
+    insurance: 'Fully insured and licensed',
+    cleaning: 'Professionally cleaned and sanitized after each rental'
 };
 
 // FAQ data
 const faqData = [
     {
         question: 'How far in advance should I book?',
-        answer: 'We recommend booking at least 2-3 weeks in advance, especially during peak season (spring and summer). However, we often have availability for last-minute bookings.'
+        answer: 'We recommend booking at least 2-3 weeks in advance, especially during peak season (spring and summer). Since we have one bounce house, availability can fill up quickly on weekends and holidays.'
     },
     {
         question: 'What\'s included in the rental?',
-        answer: 'Our rental includes the bounce house, delivery, setup, takedown, and all necessary equipment (blower, stakes, extension cords). We also provide safety instructions and guidelines.'
+        answer: 'Our princess castle rental includes the bounce house, delivery, setup, takedown, commercial blower, stakes, extension cords, and safety instructions. Everything you need for a perfect party!'
     },
     {
         question: 'What if it rains on my event day?',
@@ -63,7 +74,7 @@ const faqData = [
     },
     {
         question: 'How much space do I need?',
-        answer: 'Space requirements vary by bounce house. Generally, you\'ll need the dimensions of the bounce house plus 3-5 feet on all sides for stakes and safety clearance.'
+        answer: 'Our princess castle requires a minimum 20ft x 20ft area (15ft x 15ft bounce house plus 3-5 feet on all sides for stakes and safety clearance).'
     },
     {
         question: 'Do you provide supervision?',
@@ -71,7 +82,15 @@ const faqData = [
     },
     {
         question: 'What are your payment terms?',
-        answer: 'We require a deposit to secure your booking, with the balance due on the day of delivery. We accept cash, check, and major credit cards.'
+        answer: 'We require a $50 deposit to secure your booking, with the balance due on the day of delivery. We accept cash, check, and major credit cards.'
+    },
+    {
+        question: 'How many kids can use the bounce house at once?',
+        answer: 'Our princess castle can safely accommodate up to 8 children at once, ages 3-12 years old, with a maximum weight of 150 pounds per child.'
+    },
+    {
+        question: 'How long does setup take?',
+        answer: 'Setup typically takes 30-45 minutes. We arrive early to ensure everything is ready before your event starts.'
     }
 ];
 
