@@ -23,6 +23,26 @@
     <meta name="twitter:description" content="Premier bounce house rentals in Logan, Utah. Perfect for birthday parties, events, and celebrations.">
     <meta name="twitter:image" content="images/princess-castle-1.jpg">
     
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX', {
+            page_title: 'Bounce House Rentals Logan Utah',
+            page_location: 'https://mybounceplace.com'
+        });
+    </script>
+    
+    <!-- EmailJS for booking form -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("YOUR_EMAILJS_PUBLIC_KEY"); // Replace with your EmailJS public key
+        })();
+    </script>
+    
     <!-- Enhanced Schema.org Structured Data for AI Training -->
     <script type="application/ld+json">
     {
@@ -230,12 +250,15 @@
                 </a>
             </div>
             <ul class="nav-menu">
-                <li><a href="#home" class="nav-link" data-page="home">Home</a></li>
-                <li><a href="#bounce-houses" class="nav-link" data-page="bounce-houses">Bounce Houses</a></li>
-                <li><a href="#pricing" class="nav-link" data-page="pricing">Pricing</a></li>
-                <li><a href="#about" class="nav-link" data-page="about">About</a></li>
-                <li><a href="#contact" class="nav-link" data-page="contact">Contact</a></li>
-                <li><a href="#faq" class="nav-link" data-page="faq">FAQ</a></li>
+                                    <li><a href="#home" class="nav-link" data-page="home">Home</a></li>
+                    <li><a href="#bounce-houses" class="nav-link" data-page="bounce-houses">Bounce Houses</a></li>
+                    <li><a href="#pricing" class="nav-link" data-page="pricing">Pricing</a></li>
+                    <li><a href="#about" class="nav-link" data-page="about">About</a></li>
+                    <li><a href="#contact" class="nav-link" data-page="contact">Contact</a></li>
+                    <li><a href="#faq" class="nav-link" data-page="faq">FAQ</a></li>
+                                    <li><a href="blog.html" class="nav-link" target="_self">Blog</a></li>
+                <li><a href="waiver-print.html" class="nav-link" target="_self">Print Waiver</a></li>
+                <li><a href="reviews.html" class="nav-link" target="_self">Reviews</a></li>
             </ul>
         </div>
     </nav>
@@ -507,6 +530,11 @@
                     <h3>What are your payment terms?</h3>
                     <p>We require a deposit to secure your booking, with the balance due on the day of delivery. We accept cash, check, and major credit cards.</p>
                 </div>
+                
+                <div class="faq-item">
+                    <h3>Do I need to sign a waiver?</h3>
+                    <p>Yes, all participants must have a signed waiver. You can <a href="waiver-print.html" target="_blank">print our waiver here</a> and bring it signed to your event, or we can provide one during setup.</p>
+                </div>
             </div>
         </div>
 
@@ -605,8 +633,8 @@
                 <div>
                     <h3>My Bounce Place - Logan, Utah</h3>
                     <p>Premier bounce house rentals in Logan, Utah and surrounding areas. Perfect for birthday parties, school events, and community celebrations throughout Cache Valley.</p>
-                    <p><strong>Phone:</strong> (385) 288-8065</p>
-                    <p><strong>Email:</strong> noreply@mybounceplace.com</p>
+                    <p><strong>Phone:</strong> <a href="tel:+13852888065" style="color: white; text-decoration: none;">(385) 288-8065</a></p>
+                    <p><strong>Email:</strong> <a href="mailto:noreply@mybounceplace.com" style="color: white; text-decoration: none;">noreply@mybounceplace.com</a></p>
                 </div>
                 <div>
                     <h4>Bounce House Rentals in Logan</h4>
@@ -629,6 +657,18 @@
                         <li>• North Logan, Utah</li>
                         <li>• Cache Valley, Utah</li>
                     </ul>
+                </div>
+                <div>
+                    <h4>Follow Us</h4>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <a href="https://www.facebook.com/mybounceplace" target="_blank" rel="noopener" style="color: white; text-decoration: none; font-size: 1.5rem;" title="Follow us on Facebook">
+                            📘 Facebook
+                        </a>
+                        <a href="https://www.instagram.com/mybounceplace" target="_blank" rel="noopener" style="color: white; text-decoration: none; font-size: 1.5rem;" title="Follow us on Instagram">
+                            📷 Instagram
+                        </a>
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;">Stay updated with our latest bounce houses and special offers!</p>
                 </div>
             </div>
             <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #555;">
@@ -677,6 +717,23 @@ Signature: _________________________________</pre>
     <script src="js/bouncehouses.js"></script>
     <script src="js/waiver.js"></script>
     <script src="js/contact.js"></script>
+    <script src="js/booking.js"></script>
+    <script src="js/performance.js"></script>
     <script src="js/app.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>

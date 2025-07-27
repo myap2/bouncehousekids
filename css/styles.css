@@ -810,3 +810,169 @@ body {
         max-width: 100%;
     }
 }
+
+/* Footer */
+.footer {
+    background: #333;
+    color: white;
+    padding: 3rem 0 1rem;
+    margin-top: 4rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-section h3,
+.footer-section h4 {
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-section a {
+    color: #ccc;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section a:hover {
+    color: #007bff;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid #555;
+}
+
+.footer-bottom p {
+    margin: 0;
+    color: #ccc;
+}
+
+/* Blog Styles */
+.blog-header {
+    background: linear-gradient(135deg, #007bff, #00bcd4);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.blog-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.blog-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.blog-posts {
+    padding: 4rem 0;
+}
+
+.blog-post {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 3rem;
+    overflow: hidden;
+}
+
+.blog-post-header {
+    padding: 2rem 2rem 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.blog-post-header h2 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    line-height: 1.3;
+}
+
+.blog-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.blog-date,
+.blog-category {
+    background: #f8f9fa;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+}
+
+.blog-content {
+    padding: 2rem;
+    line-height: 1.6;
+}
+
+.blog-content h3 {
+    color: #007bff;
+    margin: 2rem 0 1rem;
+    font-size: 1.3rem;
+}
+
+.blog-content h3:first-of-type {
+    margin-top: 0;
+}
+
+.blog-content p {
+    margin-bottom: 1rem;
+    color: #555;
+}
+
+.blog-content ul,
+.blog-content ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.blog-content li {
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.blog-content strong {
+    color: #333;
+}
+
+/* Responsive Blog */
+@media (max-width: 768px) {
+    .blog-header h1 {
+        font-size: 2rem;
+    }
+    
+    .blog-post-header {
+        padding: 1.5rem 1.5rem 1rem;
+    }
+    
+    .blog-post-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .blog-content {
+        padding: 1.5rem;
+    }
+    
+    .blog-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}

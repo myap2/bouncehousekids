@@ -32,6 +32,14 @@ class NavigationManager {
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
+                const href = link.getAttribute('href');
+                
+                // Handle external links (like blog.html, waiver-print.html, etc.)
+                if (href && href.includes('.html')) {
+                    // Allow normal navigation for external pages
+                    return;
+                }
+                
                 e.preventDefault();
                 const page = link.getAttribute('data-page');
                 this.showPage(page);
