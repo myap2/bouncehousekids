@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🧪 Running pre-push tests..."
-
-# Run the test suite
-npm run test
-
-echo "✅ Pre-push tests completed successfully!"

@@ -1,0 +1,175 @@
+{
+    "business": {
+        "name": "My Bounce Place",
+        "type": "Bounce House Rental Service",
+        "location": {
+            "city": "Logan",
+            "state": "Utah",
+            "country": "United States",
+            "coordinates": {
+                "latitude": 41.7355,
+                "longitude": -111.8344
+            }
+        },
+        "contact": {
+            "phone": "(385) 288-8065",
+            "email": "noreply@mybounceplace.com",
+            "hours": "Monday - Sunday, 8:00 AM - 8:00 PM"
+        },
+        "service_area": [
+            "Logan, Utah",
+            "Smithfield, Utah", 
+            "Hyrum, Utah",
+            "Providence, Utah",
+            "North Logan, Utah",
+            "Cache Valley, Utah"
+        ],
+        "description": "Premier bounce house rental service in Logan, Utah. We provide safe, clean, and affordable inflatable rentals for birthday parties, events, and celebrations throughout Cache Valley. Our services include delivery, setup, and takedown of bounce houses."
+    },
+    "services": {
+        "bounce_house_rentals": {
+            "types": [
+                {
+                    "name": "Bounce Castle with a Slide",
+                    "description": "A fantastic bounce castle perfect for all kids! Features a fun slide, bright colors, and plenty of bouncing space for hours of entertainment.",
+                    "dimensions": {
+                        "length": 15,
+                        "width": 15,
+                        "height": 12
+                    },
+                    "capacity": {
+                        "min_age": 3,
+                        "max_age": 12,
+                        "max_weight": 150,
+                        "max_occupants": 8
+                    },
+                    "features": [
+                        "Slide included",
+                        "Bright colors",
+                        "Safety netting",
+                        "Commercial grade materials"
+                    ]
+                }
+            ],
+            "pricing": {
+                "daily": {
+                    "price": 150,
+                    "currency": "USD",
+                    "duration": "Up to 8 hours",
+                    "includes": [
+                        "Delivery",
+                        "Setup",
+                        "Takedown",
+                        "Safety equipment",
+                        "Insurance coverage"
+                    ]
+                },
+                "weekend": {
+                    "price": 200,
+                    "currency": "USD", 
+                    "duration": "Friday pickup to Sunday return",
+                    "includes": [
+                        "Extended rental period",
+                        "All daily features",
+                        "Perfect for weekend events"
+                    ]
+                },
+                "weekly": {
+                    "price": 800,
+                    "currency": "USD",
+                    "duration": "7 days",
+                    "includes": [
+                        "Unlimited fun for a week",
+                        "Great for extended events",
+                        "Significant savings",
+                        "Perfect for summer camps"
+                    ]
+                }
+            }
+        }
+    },
+    "faq": [
+        {
+            "question": "How far in advance should I book a bounce house?",
+            "answer": "We recommend booking at least 2-3 weeks in advance, especially during peak season (spring and summer). However, we often have availability for last-minute bookings."
+        },
+        {
+            "question": "What's included in the bounce house rental?",
+            "answer": "Our rental includes the bounce house, delivery, setup, takedown, and all necessary equipment (blower, stakes, extension cords). We also provide safety instructions and guidelines."
+        },
+        {
+            "question": "What if it rains on my event day?",
+            "answer": "Safety is our priority. If there's severe weather, we'll work with you to reschedule at no additional charge. Light rain is usually not a problem for covered events."
+        },
+        {
+            "question": "What areas do you serve in Utah?",
+            "answer": "We serve Logan, Utah and surrounding areas including Cache Valley, Smithfield, Hyrum, Providence, and North Logan. Free delivery and setup within 20 miles of Logan."
+        },
+        {
+            "question": "How much does a bounce house rental cost?",
+            "answer": "Our prices start at $150 for daily rentals, $200 for weekend rentals, and $800 for weekly rentals. All prices include delivery, setup, and takedown within our service area."
+        },
+        {
+            "question": "What safety measures do you have?",
+            "answer": "All our bounce houses are cleaned and sanitized after each use, regularly inspected for wear and tear, made from commercial-grade materials, and properly anchored during setup. Adult supervision is required at all times."
+        },
+        {
+            "question": "Do you provide delivery and setup?",
+            "answer": "Yes! Delivery, setup, and takedown are included in all our rental prices within our service area. We handle everything from delivery to final cleanup."
+        }
+    ],
+    "reviews": [
+        {
+            "author": "Sarah M.",
+            "location": "Logan",
+            "rating": 5,
+            "review": "Amazing service! The bounce house was perfect for my daughter's birthday party. Clean, safe, and the setup was quick and professional."
+        },
+        {
+            "author": "Mike T.",
+            "location": "Smithfield", 
+            "rating": 5,
+            "review": "Best bounce house rental in Cache Valley! Great prices, reliable service, and the kids had a blast. Highly recommend!"
+        },
+        {
+            "author": "Jennifer L.",
+            "location": "North Logan",
+            "rating": 5,
+            "review": "Professional, punctual, and the equipment was in excellent condition. Made our school event a huge success!"
+        }
+    ],
+    "keywords": [
+        "bounce house rentals logan utah",
+        "inflatable rentals logan",
+        "birthday party rentals logan",
+        "bounce castle logan",
+        "party rentals utah",
+        "kids party rentals logan",
+        "inflatable bounce house logan",
+        "bounce house delivery logan",
+        "cache valley bounce house rentals",
+        "utah inflatable rentals",
+        "logan party equipment",
+        "bounce house birthday party logan"
+    ],
+    "business_hours": {
+        "monday": "8:00 AM - 8:00 PM",
+        "tuesday": "8:00 AM - 8:00 PM", 
+        "wednesday": "8:00 AM - 8:00 PM",
+        "thursday": "8:00 AM - 8:00 PM",
+        "friday": "8:00 AM - 8:00 PM",
+        "saturday": "8:00 AM - 8:00 PM",
+        "sunday": "8:00 AM - 8:00 PM"
+    },
+    "payment_methods": [
+        "Cash",
+        "Credit Card", 
+        "Check"
+    ],
+    "additional_fees": {
+        "delivery_outside_service_area": "$2 per mile (one-way)",
+        "late_pickup": "$25 per hour after scheduled time",
+        "cleaning_fee": "$50 (if excessive dirt/damage)",
+        "security_deposit": "$100 (refundable, returned after inspection)"
+    }
+} 
