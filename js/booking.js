@@ -83,6 +83,8 @@ class BookingSystem {
                         <label for="booking-notes">Special Requests</label>
                         <textarea id="booking-notes" name="notes" rows="3" placeholder="Any special requirements or requests"></textarea>
                     </div>
+                    <input type="hidden" name="package" value="${pricingType}">
+                    <input type="hidden" name="price" value="${price}">
                     <button type="submit" class="submit-btn">Request Booking</button>
                 </form>
             </div>
@@ -106,35 +108,130 @@ class BookingSystem {
         const formData = new FormData(form);
         const bookingData = Object.fromEntries(formData);
         
-        // Add package info
-        const modal = document.getElementById('booking-modal');
-        const packageInfo = modal.querySelector('p').textContent;
-        bookingData.package = packageInfo;
-
         try {
-            // Simulate booking submission (replace with actual API call)
-            await this.submitBooking(bookingData);
+            // Show loading state
+            const submitBtn = form.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+
+            // Send booking request
+            await this.sendBookingEmail(bookingData);
+            
+            // Show success
             this.showBookingConfirmation(bookingData);
+            
+            // Track in analytics
+            this.trackBookingAnalytics(bookingData);
+            
         } catch (error) {
+            console.error('Booking error:', error);
             this.showBookingError(error);
+        } finally {
+            // Reset button
+            const submitBtn = form.querySelector('.submit-btn');
+            submitBtn.textContent = 'Request Booking';
+            submitBtn.disabled = false;
         }
     }
 
-    async submitBooking(bookingData) {
-        // Simulate API call - replace with actual booking system
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Track booking attempt in analytics
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'booking_request', {
-                        event_category: 'engagement',
-                        event_label: bookingData.package,
-                        value: 1
-                    });
-                }
-                resolve(bookingData);
-            }, 1000);
+    async sendBookingEmail(bookingData) {
+        // Option 1: Using EmailJS (Recommended for easy setup)
+        if (typeof emailjs !== 'undefined') {
+            return this.sendViaEmailJS(bookingData);
+        }
+        
+        // Option 2: Using Formspree (Alternative)
+        return this.sendViaFormspree(bookingData);
+    }
+
+    async sendViaEmailJS(bookingData) {
+        const templateParams = {
+            to_email: 'noreply@mybounceplace.com', // Your email
+            from_name: bookingData.name,
+            from_email: bookingData.email,
+            from_phone: bookingData.phone,
+            event_date: bookingData.eventDate,
+            event_time: bookingData.eventTime,
+            event_location: bookingData.location,
+            number_guests: bookingData.guests,
+            special_requests: bookingData.notes,
+            package: bookingData.package,
+            price: bookingData.price,
+            message: this.formatBookingEmail(bookingData)
+        };
+
+        return emailjs.send(
+            'YOUR_EMAILJS_SERVICE_ID', // Replace with your EmailJS service ID
+            'YOUR_EMAILJS_TEMPLATE_ID', // Replace with your EmailJS template ID
+            templateParams
+        );
+    }
+
+    async sendViaFormspree(bookingData) {
+        const formData = new FormData();
+        
+        // Add all booking data to form
+        Object.keys(bookingData).forEach(key => {
+            formData.append(key, bookingData[key]);
         });
+
+        const response = await fetch('https://formspree.io/f/YOUR_FORMSPREE_ID', { // Replace with your Formspree ID
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send booking request');
+        }
+
+        return response.json();
+    }
+
+    formatBookingEmail(bookingData) {
+        return `
+New Bounce House Booking Request
+
+Customer Details:
+- Name: ${bookingData.name}
+- Email: ${bookingData.email}
+- Phone: ${bookingData.phone}
+
+Event Details:
+- Date: ${bookingData.eventDate}
+- Time: ${bookingData.eventTime}
+- Location: ${bookingData.location}
+- Number of Guests: ${bookingData.guests || 'Not specified'}
+
+Package Details:
+- Package: ${bookingData.package}
+- Price: ${bookingData.price}
+
+Special Requests:
+${bookingData.notes || 'None'}
+
+---
+This booking request was submitted from the My Bounce Place website.
+Please respond within 24 hours to confirm availability.
+        `;
+    }
+
+    trackBookingAnalytics(bookingData) {
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'booking_request', {
+                event_category: 'engagement',
+                event_label: bookingData.package,
+                value: 1,
+                custom_parameters: {
+                    package: bookingData.package,
+                    price: bookingData.price,
+                    event_date: bookingData.eventDate
+                }
+            });
+        }
     }
 
     showBookingConfirmation(bookingData) {
@@ -151,6 +248,12 @@ class BookingSystem {
                     <p>Package: ${bookingData.package}</p>
                 </div>
                 <p>We'll contact you within 24 hours to confirm your booking and discuss setup details.</p>
+                <p><strong>Next Steps:</strong></p>
+                <ul style="text-align: left; display: inline-block;">
+                    <li>Check your email for a confirmation</li>
+                    <li>We'll call you to confirm availability</li>
+                    <li>Discuss delivery and setup details</li>
+                </ul>
                 <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
             </div>
         `;
@@ -163,6 +266,12 @@ class BookingSystem {
                 <h3>❌ Booking Error</h3>
                 <p>Sorry, there was an issue processing your booking request.</p>
                 <p>Please try again or call us directly at <a href="tel:+13852888065">(385) 288-8065</a></p>
+                <p><strong>Alternative Contact Methods:</strong></p>
+                <ul style="text-align: left; display: inline-block;">
+                    <li>Call: (385) 288-8065</li>
+                    <li>Email: noreply@mybounceplace.com</li>
+                    <li>Text us for quick response</li>
+                </ul>
                 <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
             </div>
         `;
