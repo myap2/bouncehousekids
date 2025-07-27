@@ -30,4 +30,16 @@
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
+    <url>
+        <loc>https://mybounceplace.com/blog.html</loc>
+        <lastmod>2024-12-26</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://mybounceplace.com/reviews.html</loc>
+        <lastmod>2024-12-26</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
 </urlset> 
