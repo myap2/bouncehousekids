@@ -1,5 +1,5 @@
 // Service Worker for My Bounce Place PWA
-const CACHE_NAME = 'my-bounce-place-v1';
+const CACHE_NAME = 'my-bounce-place-v2';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -43,17 +43,35 @@ self.addEventListener('install', event => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', event => {
+    // Skip caching for analytics and tracking requests
+    if (event.request.url.includes('googletagmanager.com') || 
+        event.request.url.includes('google-analytics.com') ||
+        event.request.url.includes('facebook.com') ||
+        event.request.url.includes('doubleclick.net')) {
+        return;
+    }
+
     event.respondWith(
-        caches.match(event.request)
+        fetch(event.request)
             .then(response => {
-                // Return cached version or fetch from network
-                return response || fetch(event.request);
+                // Cache successful responses for static assets
+                if (response.status === 200 && 
+                    (event.request.destination === 'style' || 
+                     event.request.destination === 'script' || 
+                     event.request.destination === 'image')) {
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
+                return response;
             })
             .catch(() => {
-                // Return offline page for navigation requests
+                // Fallback to cache for navigation requests
                 if (event.request.mode === 'navigate') {
                     return caches.match('/index.html');
                 }
+                return caches.match(event.request);
             })
     );
 });

@@ -91,7 +91,11 @@ class NavigationManager {
             // Update URL and history
             if (updateHistory) {
                 const url = `#${pageName}`;
-                window.history.pushState({ page: pageName }, '', url);
+                try {
+                    window.history.pushState({ page: pageName }, '', url);
+                } catch (error) {
+                    console.warn('Navigation history update failed:', error);
+                }
             }
 
             // Update active nav link

@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
 
+# Disallow JavaScript files that might cause redirects
+Disallow: /js/
+Disallow: /sw.js
+
 # AI Training Data
 Allow: /ai-training-data.json
 Allow: /ai-training-instructions.md
