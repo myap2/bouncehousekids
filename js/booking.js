@@ -85,7 +85,7 @@ class BookingSystem {
                     </div>
                     <input type="hidden" name="package" value="${pricingType}">
                     <input type="hidden" name="price" value="${price}">
-                    <button type="submit" class="submit-btn">Request Booking</button>
+                    <button type="submit" class="submit-btn">Continue to Payment</button>
                 </form>
             </div>
         `;
@@ -115,43 +115,33 @@ class BookingSystem {
                 });
             }
         }
+
+        // Listen for payment completion to finalize booking
+        document.addEventListener('paymentCompleted', (e) => {
+            this.finalizeBooking(e.detail);
+        });
     }
 
     async processBooking(form) {
         try {
-            // Check if selected date is blocked
+            // Check availability using calendar system
             const eventDate = form.querySelector('#booking-date').value;
-            const blockedDates = [
-                '2025-12-25', // Christmas
-                '2025-12-31', // New Year's Eve
-                '2026-01-01', // New Year's Day
-                '2026-01-15', // Martin Luther King Jr. Day
-                '2026-02-16', // Presidents' Day
-                '2026-05-25', // Memorial Day
-                '2026-07-04', // Independence Day
-                '2026-09-07', // Labor Day
-                '2026-10-12', // Columbus Day
-                '2026-11-11', // Veterans Day
-                '2026-11-26', // Thanksgiving Day
-                '2026-12-25', // Christmas 2026
-                '2026-12-31', // New Year's Eve 2026
-                '2027-01-01', // New Year's Day 2027
-                // Add more blocked dates here as needed
-            ];
+            const eventTime = form.querySelector('#booking-time').value;
             
-            if (blockedDates.includes(eventDate)) {
-                this.showBookingAvailabilityMessage('❌ Cannot book on this date. Please select another date.', 'error');
+            if (window.availabilityCalendar && !window.availabilityCalendar.checkAvailability(eventDate, eventTime, '1')) {
+                this.showBookingAvailabilityMessage('❌ This date/time is no longer available. Please select another.', 'error');
                 return;
             }
 
             // Disable submit button
             const submitBtn = form.querySelector('.submit-btn');
-            submitBtn.textContent = 'Sending...';
+            submitBtn.textContent = 'Processing...';
             submitBtn.disabled = true;
 
             // Collect form data
             const formData = new FormData(form);
             const bookingData = {
+                id: 'booking_' + Date.now(),
                 name: formData.get('name'),
                 email: formData.get('email'),
                 phone: formData.get('phone'),
@@ -162,21 +152,31 @@ class BookingSystem {
                 package: formData.get('package'),
                 price: formData.get('price'),
                 notes: formData.get('notes'),
-                timestamp: new Date().toISOString()
+                bounceHouseName: 'Bounce Castle with a Slide',
+                timestamp: new Date().toISOString(),
+                status: 'pending_payment'
             };
 
-            // Save to localStorage first (always do this)
-            const existingBookings = JSON.parse(localStorage.getItem('bookingRequests') || '[]');
-            const bookingId = 'booking_' + Date.now();
-            existingBookings.push({
-                id: bookingId,
-                ...bookingData,
-                status: 'sent'
-            });
-            localStorage.setItem('bookingRequests', JSON.stringify(existingBookings));
+            // Validate required fields
+            if (!bookingData.name || !bookingData.email || !bookingData.eventDate || !bookingData.eventTime) {
+                throw new Error('Please fill in all required fields');
+            }
 
-            // Show success message with email options
-            this.showBookingEmailOptions(bookingData);
+            // Save booking data temporarily (will be finalized after payment)
+            const tempBookings = JSON.parse(localStorage.getItem('tempBookings') || '[]');
+            tempBookings.push(bookingData);
+            localStorage.setItem('tempBookings', JSON.stringify(tempBookings));
+
+            // Close booking modal
+            document.getElementById('booking-modal')?.remove();
+
+            // Open payment modal
+            if (window.paymentSystem) {
+                window.paymentSystem.createPaymentModal(bookingData);
+            } else {
+                // Fallback if payment system not available
+                this.showBookingConfirmation(bookingData);
+            }
             
             // Track in analytics
             this.trackBookingAnalytics(bookingData);
@@ -187,8 +187,10 @@ class BookingSystem {
         } finally {
             // Reset button
             const submitBtn = form.querySelector('.submit-btn');
-            submitBtn.textContent = 'Request Booking';
-            submitBtn.disabled = false;
+            if (submitBtn) {
+                submitBtn.textContent = 'Continue to Payment';
+                submitBtn.disabled = false;
+            }
         }
     }
 
@@ -581,6 +583,107 @@ Please respond within 24 hours to confirm availability.
         if (dateInput) {
             dateInput.parentNode.appendChild(messageDiv);
         }
+    }
+
+    finalizeBooking(paymentData) {
+        const bookingData = paymentData.booking;
+        const paymentInfo = paymentData.payment;
+
+        try {
+            // Mark date/time as booked in calendar
+            if (window.availabilityCalendar) {
+                window.availabilityCalendar.addBooking(bookingData.eventDate, bookingData.eventTime, '1');
+            }
+
+            // Move from temp bookings to confirmed bookings
+            const tempBookings = JSON.parse(localStorage.getItem('tempBookings') || '[]');
+            const updatedTempBookings = tempBookings.filter(b => b.id !== bookingData.id);
+            localStorage.setItem('tempBookings', JSON.stringify(updatedTempBookings));
+
+            // Save confirmed booking
+            const confirmedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const finalBooking = {
+                ...bookingData,
+                status: 'confirmed',
+                paymentId: paymentInfo.id,
+                amountPaid: paymentInfo.amount,
+                paymentOption: paymentInfo.paymentOption,
+                confirmationDate: new Date().toISOString()
+            };
+            confirmedBookings.push(finalBooking);
+            localStorage.setItem('bookings', JSON.stringify(confirmedBookings));
+
+            // Trigger email notifications
+            if (window.emailNotificationSystem) {
+                window.emailNotificationSystem.sendBookingConfirmation(finalBooking);
+                window.emailNotificationSystem.sendBusinessNotification('new_booking', finalBooking);
+                window.emailNotificationSystem.scheduleReminderEmails(finalBooking);
+            }
+
+            // Show success message
+            this.showBookingSuccess(finalBooking);
+
+            // Track successful booking
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'purchase', {
+                    transaction_id: finalBooking.id,
+                    value: paymentInfo.amount,
+                    currency: 'USD',
+                    items: [{
+                        item_id: '1',
+                        item_name: 'Bounce Castle with a Slide',
+                        category: 'Bounce House Rental',
+                        quantity: 1,
+                        price: paymentInfo.amount
+                    }]
+                });
+            }
+
+        } catch (error) {
+            console.error('Error finalizing booking:', error);
+            this.showBookingError('Booking saved but there was an issue with confirmation. We will contact you shortly.');
+        }
+    }
+
+    showBookingSuccess(bookingData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal success-modal';
+        modal.innerHTML = `
+            <div class="modal-content success-content">
+                <div class="success-icon">🎉</div>
+                <h3>Booking Confirmed!</h3>
+                <p><strong>Booking ID:</strong> ${bookingData.id}</p>
+                <p><strong>Event Date:</strong> ${bookingData.eventDate}</p>
+                <p><strong>Event Time:</strong> ${bookingData.eventTime}</p>
+                <p><strong>Bounce House:</strong> ${bookingData.bounceHouseName}</p>
+                <p>You will receive a confirmation email shortly with all the details.</p>
+                <p>We'll contact you 24 hours before your event to confirm setup details.</p>
+                <button class="submit-btn" onclick="this.parentElement.parentElement.remove(); showPage('home');">
+                    Continue
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    showBookingConfirmation(bookingData) {
+        // Fallback confirmation when payment system is not available
+        const modal = document.createElement('div');
+        modal.className = 'modal success-modal';
+        modal.innerHTML = `
+            <div class="modal-content success-content">
+                <div class="success-icon">📋</div>
+                <h3>Booking Request Received!</h3>
+                <p>Thank you for your booking request. We will contact you shortly to confirm availability and payment details.</p>
+                <p><strong>Event Date:</strong> ${bookingData.eventDate}</p>
+                <p><strong>Event Time:</strong> ${bookingData.eventTime}</p>
+                <p><strong>Contact Info:</strong> ${bookingData.phone}</p>
+                <button class="submit-btn" onclick="this.parentElement.parentElement.remove(); showPage('home');">
+                    Continue
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 
     setupBookingConfirmation() {

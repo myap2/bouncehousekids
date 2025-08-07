@@ -31,7 +31,8 @@ const bounceHouses = [
             'Anchor points included'
         ],
         rating: 4.8,
-        isActive: true
+        isActive: true,
+        inventory: 1  // Only one unit available
     }
 ];
 
@@ -44,7 +45,7 @@ const companyInfo = {
     phone: '(385) 288-8065',
     email: 'noreply@mybounceplace.com',
     hours: 'Monday - Sunday, 8:00 AM - 8:00 PM',
-    serviceArea: 'Greater metropolitan area with free delivery and setup within 20 miles'
+    serviceArea: 'Logan, Utah and surrounding areas with free delivery and setup within 20 miles'
 };
 
 // FAQ data
@@ -71,7 +72,15 @@ const faqData = [
     },
     {
         question: 'What are your payment terms?',
-        answer: 'We require a deposit to secure your booking, with the balance due on the day of delivery. We accept cash, check, and major credit cards.'
+        answer: 'We require a deposit to secure your booking, with the balance due on the day of delivery. We accept cash, check, and major credit cards. Online payment is also available for your convenience.'
+    },
+    {
+        question: 'Do you have multiple bounce houses available?',
+        answer: 'Currently we have one premium bounce castle that we maintain to the highest standards. This allows us to ensure exceptional quality and availability for our customers.'
+    },
+    {
+        question: 'What age groups can use the bounce house?',
+        answer: 'Our bounce castle is perfect for children ages 3-12, with a maximum of 8 children at once and a weight limit of 150 pounds per child.'
     }
 ];
 
