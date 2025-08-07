@@ -605,6 +605,7 @@ class ContactManager {
 // Initialize contact manager
 document.addEventListener('DOMContentLoaded', () => {
     window.ContactManager = new ContactManager();
+    window.ContactManager.init(); // Initialize the contact manager
 
     // Optional: Add phone number formatting
     const phoneInput = document.getElementById('contact-phone');
