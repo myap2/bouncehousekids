@@ -67,6 +67,23 @@ class App {
         // Pre-load any necessary data
         this.preloadImages();
         this.setupErrorHandlers();
+        this.initializeCalendar();
+    }
+
+    initializeCalendar() {
+        // Initialize the calendar when the contact page becomes visible
+        const observer = new MutationObserver(() => {
+            const calendarContainer = document.getElementById('availability-calendar');
+            if (calendarContainer && window.availabilityCalendar) {
+                window.availabilityCalendar.init();
+                observer.disconnect(); // Stop observing once initialized
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     }
 
     preloadImages() {

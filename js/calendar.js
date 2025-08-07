@@ -168,16 +168,17 @@ class AvailabilityCalendar {
 
         // Get booked time slots for this date
         const bookedSlots = this.getBookedTimeSlotsForDate(this.selectedDate);
+        const isDateBooked = bookedSlots.length > 0; // For single unit, any booking means all slots unavailable
         
         slotsContainer.innerHTML = this.availableTimeSlots.map(slot => {
-            const isBooked = bookedSlots.includes(slot.value);
+            const isBooked = isDateBooked; // All slots are booked if any slot is booked (single unit)
             const slotClass = isBooked ? 'time-slot booked' : 'time-slot available';
             const clickHandler = isBooked ? '' : `onclick="window.availabilityCalendar.selectTimeSlot('${slot.value}')"`;
             
             return `
                 <div class="${slotClass}" data-time="${slot.value}" ${clickHandler}>
                     ${slot.label}
-                    ${isBooked ? '<span class="booked-label">Booked</span>' : ''}
+                    ${isBooked ? '<span class="booked-label">Unavailable</span>' : ''}
                 </div>
             `;
         }).join('');
@@ -229,8 +230,9 @@ class AvailabilityCalendar {
     }
 
     isDateBooked(dateString) {
+        // For single bounce house business, if any time slot is booked, the whole day is booked
         return this.bookedDates.hasOwnProperty(dateString) && 
-               this.bookedDates[dateString].length >= this.availableTimeSlots.length;
+               this.bookedDates[dateString].length > 0;
     }
 
     getBookedTimeSlotsForDate(dateString) {
