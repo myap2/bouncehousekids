@@ -1,5 +1,3 @@
-console.log('📜 Contact.js file loaded successfully!');
-
 // Contact Form Management - replaces server-side form processing
 class ContactManager {
     constructor() {
@@ -11,60 +9,41 @@ class ContactManager {
     }
 
     setupForm() {
-        console.log('🔧 Setting up contact form...');
-        
         this.form = document.getElementById('contact-form');
         if (!this.form) {
-            console.log('❌ Contact form not found!');
             return;
         }
-        
-        console.log('✅ Contact form found:', this.form);
 
         // Remove any existing submit listeners
         this.form.removeEventListener('submit', this.handleSubmit);
         
         // Prevent default form submission to avoid redirecting and URL params
         this.form.addEventListener('submit', (e) => {
-            console.log('📝 Form submit event triggered');
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            console.log('🛑 Default form submission prevented');
             this.handleSubmit();
             return false;
         });
-        
-        console.log('📋 Form submit listener added');
 
         // Add input validation listeners
         this.setupInputListeners();
         
         // Set minimum date to today
         this.setupDatePicker();
-        
-        console.log('✅ Form setup complete');
     }
 
     setupInputListeners() {
-        console.log('🎯 Setting up input listeners...');
-        
         const inputs = this.form.querySelectorAll('input, textarea');
-        console.log(`📝 Found ${inputs.length} form inputs:`, inputs);
         
         inputs.forEach((input, index) => {
-            console.log(`📋 Setting up input ${index + 1}:`, input.name, input.type);
             input.addEventListener('blur', () => {
-                console.log(`🔍 Validating field: ${input.name}`);
                 this.validateField(input);
             });
             input.addEventListener('input', () => {
-                console.log(`🧹 Clearing error for field: ${input.name}`);
                 this.clearFieldError(input);
             });
         });
-        
-        console.log('✅ Input listeners setup complete');
     }
 
     validateField(field) {
@@ -116,13 +95,7 @@ class ContactManager {
                 break;
 
             case 'message':
-                if (!value) {
-                    errorMessage = 'Message is required';
-                    isValid = false;
-                } else if (value.length < 10) {
-                    errorMessage = 'Message must be at least 10 characters';
-                    isValid = false;
-                }
+                // Message is optional - no validation required
                 break;
 
             case 'desiredDate':
@@ -194,7 +167,7 @@ class ContactManager {
 
     validateForm() {
         const formData = new FormData(this.form);
-        const fields = ['name', 'email', 'address', 'desiredDate', 'message']; // phone is optional
+        const fields = ['name', 'email', 'address', 'desiredDate']; // phone and message are optional
         let isValid = true;
 
         fields.forEach(fieldName => {
@@ -229,18 +202,13 @@ class ContactManager {
     }
 
     async handleSubmit() {
-        console.log('🚀 Form submission started');
-        
         // Validate form
         if (!this.validateForm()) {
-            console.log('❌ Form validation failed');
             return;
         }
-        console.log('✅ Form validation passed');
 
         // Collect form data
         const data = this.collectFormData();
-        console.log('📋 Collected form data:', data);
 
         // Prevent any URL changes
         const currentUrl = window.location.href;
@@ -256,7 +224,6 @@ class ContactManager {
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending...';
-        console.log('🔒 Submit button disabled');
 
         // Save to localStorage first (always do this)
         const existingMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
@@ -267,19 +234,15 @@ class ContactManager {
             status: 'sent'
         });
         localStorage.setItem('contactMessages', JSON.stringify(existingMessages));
-        console.log('💾 Message saved to localStorage with ID:', messageId);
 
         try {
             // Try to send email automatically
-            console.log('🔄 Attempting to send email...');
             const emailSent = await this.sendEmailAutomatically(data);
             
             if (emailSent) {
-                console.log('✅ Email sent successfully!');
                 // Show success message
                 this.showInlineSuccess(data);
             } else {
-                console.log('⚠️ Email failed, showing fallback options');
                 // Show email options as fallback
                 this.showEmailOptions(data);
             }
@@ -297,7 +260,6 @@ class ContactManager {
             });
 
         } catch (error) {
-            console.error('Error in form submission:', error);
             this.showError('An error occurred. Please try again or call us directly.');
         } finally {
             // Re-enable submit button
@@ -311,15 +273,6 @@ class ContactManager {
 
     async sendEmailAutomatically(data) {
         try {
-            console.log('📧 Starting email send process...');
-            console.log('📋 Form data to send:', data);
-            console.log('🔍 Data validation:');
-            console.log('  - Name:', data.name ? '✅' : '❌');
-            console.log('  - Email:', data.email ? '✅' : '❌');
-            console.log('  - Address:', data.address ? '✅' : '❌');
-            console.log('  - Date:', data.desiredDate ? '✅' : '❌');
-            console.log('  - Message:', data.message ? '✅' : '❌');
-            
             // Try using Formspree (free service) - using URLSearchParams format
             const formData = new URLSearchParams();
             formData.append('name', data.name);
@@ -330,19 +283,6 @@ class ContactManager {
             formData.append('message', data.message);
             formData.append('_subject', `Bounce House Rental Request - ${data.name}`);
             formData.append('_replyto', data.email);
-
-            console.log('📤 Sending to Formspree URL: https://formspree.io/f/mgvzkqgp');
-            console.log('📦 FormData contents:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`  ${key}: ${value}`);
-            }
-
-            console.log('🌐 Making fetch request to Formspree...');
-            console.log('📤 Request method: POST');
-            console.log('📤 Request headers:', {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json'
-            });
             
             const response = await fetch('https://formspree.io/f/mgvzkqgp', {
                 method: 'POST',
@@ -353,34 +293,12 @@ class ContactManager {
                 }
             });
 
-            console.log('📡 Formspree response received!');
-            console.log('📡 Response status:', response.status);
-            console.log('📡 Response statusText:', response.statusText);
-            console.log('📡 Response ok:', response.ok);
-            console.log('📡 Response type:', response.type);
-            console.log('📡 Response headers:', response.headers);
-
-            // Try to get response text for debugging
-            try {
-                const responseText = await response.text();
-                console.log('📡 Formspree response body:', responseText);
-            } catch (textError) {
-                console.log('📡 Could not read response body:', textError);
-            }
-
             if (response.ok) {
-                console.log('✅ Email sent successfully via Formspree');
                 return true;
             } else {
-                console.log('❌ Formspree failed, status:', response.status);
-                console.log('❌ Formspree failed, statusText:', response.statusText);
                 return false;
             }
         } catch (error) {
-            console.log('❌ Email sending failed with error:', error);
-            console.log('❌ Error name:', error.name);
-            console.log('❌ Error message:', error.message);
-            console.log('❌ Error stack:', error.stack);
             return false;
         }
     }
@@ -424,7 +342,6 @@ class ContactManager {
 
     async tryFormspree(data) {
         try {
-            console.log('Attempting to send email via Formspree...');
             const formData = new FormData(this.form);
             
             // Add hidden fields for better email formatting
@@ -438,18 +355,13 @@ class ContactManager {
                     'Accept': 'application/json'
                 }
             });
-
-            console.log('Formspree response status:', response.status);
             
             if (response.ok) {
-                console.log('✅ Formspree email sent successfully');
                 return true;
             } else {
-                console.error('❌ Formspree failed:', response.status, response.statusText);
                 return false;
             }
         } catch (error) {
-            console.error('❌ Formspree error:', error);
             return false;
         }
     }
@@ -457,11 +369,9 @@ class ContactManager {
     async tryAlternativeEmail(data) {
         try {
             // Try EmailJS as alternative
-            console.log('Attempting to send email via EmailJS...');
             
             // Check if EmailJS is loaded
             if (typeof emailjs === 'undefined') {
-                console.log('EmailJS not loaded, loading it now...');
                 await this.loadEmailJS();
             }
             
@@ -482,10 +392,8 @@ class ContactManager {
                 templateParams
             );
 
-            console.log('✅ EmailJS email sent successfully:', result);
             return true;
         } catch (error) {
-            console.error('❌ EmailJS error:', error);
             return false;
         }
     }
@@ -651,30 +559,16 @@ class ContactManager {
 
 // Initialize contact manager
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM Content Loaded - Initializing Contact Manager');
-    
-    // Test if form exists
-    const testForm = document.getElementById('contact-form');
-    console.log('🔍 Form found on DOMContentLoaded:', testForm);
-    
     window.ContactManager = new ContactManager();
-    console.log('📦 ContactManager instance created');
-    
     window.ContactManager.init(); // Initialize the contact manager
-    console.log('✅ ContactManager initialized');
 
     // Optional: Add phone number formatting
     const phoneInput = document.getElementById('contact-phone');
     if (phoneInput) {
-        console.log('📞 Phone input found, adding formatting');
         phoneInput.addEventListener('input', (e) => {
             if (window.ContactManager) {
                 window.ContactManager.formatPhoneNumber(e.target);
             }
         });
-    } else {
-        console.log('⚠️ Phone input not found');
     }
-    
-    console.log('🎯 Contact form setup complete');
 });
