@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mailto Link</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .test-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            margin: 20px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Mailto Link</h1>
+    <p>Click the button below to test if the mailto link opens your email client:</p>
+    
+    <a href="mailto:noreply@mybounceplace.com?subject=Test%20Message&body=This%20is%20a%20test%20message%20from%20the%20bounce%20house%20website." class="test-button">
+        📧 Test Email Link
+    </a>
+    
+    <p><strong>Expected behavior:</strong></p>
+    <ul style="text-align: left; display: inline-block;">
+        <li>Your default email client should open</li>
+        <li>To: noreply@mybounceplace.com</li>
+        <li>Subject: Test Message</li>
+        <li>Body: This is a test message from the bounce house website.</li>
+    </ul>
+    
+    <p><em>If this works, your contact form will work too!</em></p>
+</body>
+</html> 

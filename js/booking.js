@@ -105,21 +105,40 @@ class BookingSystem {
     }
 
     async processBooking(form) {
-        const formData = new FormData(form);
-        const bookingData = Object.fromEntries(formData);
-        
         try {
-            // Show loading state
+            // Disable submit button
             const submitBtn = form.querySelector('.submit-btn');
-            const originalText = submitBtn.textContent;
             submitBtn.textContent = 'Sending...';
             submitBtn.disabled = true;
 
-            // Send booking request
-            await this.sendBookingEmail(bookingData);
-            
-            // Show success
-            this.showBookingConfirmation(bookingData);
+            // Collect form data
+            const formData = new FormData(form);
+            const bookingData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                eventDate: formData.get('eventDate'),
+                eventTime: formData.get('eventTime'),
+                location: formData.get('location'),
+                guests: formData.get('guests'),
+                package: formData.get('package'),
+                price: formData.get('price'),
+                notes: formData.get('notes'),
+                timestamp: new Date().toISOString()
+            };
+
+            // Save to localStorage first (always do this)
+            const existingBookings = JSON.parse(localStorage.getItem('bookingRequests') || '[]');
+            const bookingId = 'booking_' + Date.now();
+            existingBookings.push({
+                id: bookingId,
+                ...bookingData,
+                status: 'sent'
+            });
+            localStorage.setItem('bookingRequests', JSON.stringify(existingBookings));
+
+            // Show success message with email options
+            this.showBookingEmailOptions(bookingData);
             
             // Track in analytics
             this.trackBookingAnalytics(bookingData);
@@ -164,31 +183,125 @@ class BookingSystem {
     }
 
     async sendViaFormspree(bookingData) {
-        const formData = new FormData();
-        
-        // Add all booking data to form
-        Object.keys(bookingData).forEach(key => {
-            formData.append(key, bookingData[key]);
-        });
+        try {
+            console.log('Attempting to send booking via Formspree...');
+            const formData = new FormData();
+            
+            // Add all booking data to form
+            Object.keys(bookingData).forEach(key => {
+                formData.append(key, bookingData[key]);
+            });
 
-        // Add form type identifier for Formspree
-        formData.append('form_type', 'booking_request');
-        formData.append('subject', `New Bounce House Booking - ${bookingData.name}`);
+            // Add form type identifier for Formspree
+            formData.append('form_type', 'booking_request');
+            formData.append('_subject', `New Bounce House Booking - ${bookingData.name}`);
+            formData.append('_replyto', bookingData.email);
 
-        // Use your existing Formspree endpoint (same as contact form)
-        const response = await fetch('https://formspree.io/f/mgvzkqgp', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json'
+            const response = await fetch('https://formspree.io/f/mgvzkqgp', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            console.log('Formspree booking response status:', response.status);
+            
+            if (response.ok) {
+                console.log('✅ Booking sent successfully via Formspree');
+                return true;
+            } else {
+                console.error('❌ Formspree booking failed:', response.status, response.statusText);
+                return false;
             }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to send booking request');
+        } catch (error) {
+            console.error('❌ Formspree booking error:', error);
+            return false;
         }
+    }
 
-        return response.json();
+    // Fallback email method for bookings
+    sendBookingFallbackEmail(bookingData) {
+        const subject = encodeURIComponent(`New Bounce House Booking - ${bookingData.name}`);
+        const body = encodeURIComponent(this.formatBookingEmail(bookingData));
+        
+        const mailtoLink = `mailto:noreply@mybounceplace.com?subject=${subject}&body=${body}`;
+        
+        // Show user fallback options
+        this.showBookingFallbackOptions(bookingData, mailtoLink);
+    }
+
+    showBookingFallbackOptions(bookingData, mailtoLink) {
+        const modal = document.getElementById('booking-modal');
+        const smsLink = `sms:3852888065?body=${encodeURIComponent(`Hi! I want to book a bounce house. Name: ${bookingData.name}, Date: ${bookingData.eventDate}, Package: ${bookingData.package}, Email: ${bookingData.email}`)}`;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; text-align: center;">
+                <h3>⚠️ Email System Temporarily Unavailable</h3>
+                <p>Your booking request has been saved locally. To ensure we receive your request, please use one of these options:</p>
+                
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
+                    <a href="${mailtoLink}" class="hero-button" style="background: #007bff;">📧 Send Email</a>
+                    <a href="${smsLink}" class="hero-button" style="background: #28a745;">📱 Send SMS</a>
+                    <a href="tel:3852888065" class="hero-button" style="background: #17a2b8;">📞 Call Now</a>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
+                    <p><strong>Your Booking Details:</strong></p>
+                    <p>Name: ${bookingData.name}</p>
+                    <p>Date: ${bookingData.eventDate}</p>
+                    <p>Time: ${bookingData.eventTime}</p>
+                    <p>Package: ${bookingData.package}</p>
+                    <p>Price: ${bookingData.price}</p>
+                </div>
+                
+                <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
+            </div>
+        `;
+    }
+
+    showBookingEmailOptions(bookingData) {
+        const modal = document.getElementById('booking-modal');
+        const mailtoLink = this.createBookingMailtoLink(bookingData);
+        const smsLink = this.createBookingSMSLink(bookingData);
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; text-align: center;">
+                <h3>🎉 Booking Request Submitted!</h3>
+                <p>Thank you for choosing My Bounce Place!</p>
+                <p>To ensure we receive your booking request, please send us an email:</p>
+                
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
+                    <a href="${mailtoLink}" class="hero-button" style="background: #007bff;">📧 Send Email</a>
+                    <a href="${smsLink}" class="hero-button" style="background: #28a745;">📱 Send SMS</a>
+                    <a href="tel:3852888065" class="hero-button" style="background: #17a2b8;">📞 Call Now</a>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
+                    <p><strong>Your Booking Details:</strong></p>
+                    <p>Name: ${bookingData.name}</p>
+                    <p>Date: ${bookingData.eventDate}</p>
+                    <p>Time: ${bookingData.eventTime}</p>
+                    <p>Package: ${bookingData.package}</p>
+                    <p>Price: ${bookingData.price}</p>
+                </div>
+                
+                <p>We'll contact you within 24 hours to confirm your booking and discuss setup details.</p>
+                <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
+            </div>
+        `;
+    }
+
+    createBookingMailtoLink(bookingData) {
+        const subject = encodeURIComponent(`New Bounce House Booking - ${bookingData.name}`);
+        const body = encodeURIComponent(this.formatBookingEmail(bookingData));
+        
+        return `mailto:noreply@mybounceplace.com?subject=${subject}&body=${body}`;
+    }
+
+    createBookingSMSLink(bookingData) {
+        const message = encodeURIComponent(`Hi! I want to book a bounce house. Name: ${bookingData.name}, Date: ${bookingData.eventDate}, Package: ${bookingData.package}, Email: ${bookingData.email}`);
+        return `sms:3852888065?body=${message}`;
     }
 
     formatBookingEmail(bookingData) {

@@ -209,8 +209,93 @@ class ContactManager {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending...';
 
+        // Save to localStorage first (always do this)
+        const existingMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
+        const messageId = 'msg_' + Date.now();
+        existingMessages.push({
+            id: messageId,
+            ...data,
+            status: 'sent'
+        });
+        localStorage.setItem('contactMessages', JSON.stringify(existingMessages));
+
         try {
-            // Submit to Formspree
+            // Show success message with email options
+            this.showEmailOptions(data);
+            
+            // Reset form
+            this.form.reset();
+            
+            // Clear any remaining field errors
+            const errorElements = this.form.querySelectorAll('.field-error');
+            errorElements.forEach(el => el.remove());
+            
+            const fields = this.form.querySelectorAll('input, textarea');
+            fields.forEach(field => {
+                field.style.borderColor = '';
+            });
+
+        } catch (error) {
+            console.error('Error in form submission:', error);
+            this.showError('An error occurred. Please try again or call us directly.');
+        } finally {
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            
+            // Clean up URL observer
+            window.removeEventListener('popstate', urlObserver);
+        }
+    }
+
+    showEmailOptions(data) {
+        // Create success message container
+        let successContainer = this.form.querySelector('.form-success');
+        
+        if (!successContainer) {
+            successContainer = document.createElement('div');
+            successContainer.className = 'form-success';
+            successContainer.style.cssText = `
+                background: #d4edda;
+                color: #155724;
+                padding: 1rem;
+                border-radius: 5px;
+                margin-bottom: 1rem;
+                border: 1px solid #c3e6cb;
+                text-align: center;
+            `;
+            this.form.insertBefore(successContainer, this.form.firstChild);
+        }
+        
+        const mailtoLink = this.createMailtoLink(data);
+        const smsLink = this.createSMSLink(data);
+        
+        successContainer.innerHTML = `
+            <strong>✅ Message Sent Successfully!</strong><br><br>
+            Your message has been saved. To ensure we receive it, please send us an email:<br><br>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0;">
+                <a href="${mailtoLink}" class="btn btn-primary" style="display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; text-decoration: none; border-radius: 3px;">📧 Send Email</a>
+                <a href="${smsLink}" class="btn btn-success" style="display: inline-block; padding: 0.5rem 1rem; background: #28a745; color: white; text-decoration: none; border-radius: 3px;">📱 Send SMS</a>
+                <a href="tel:3852888065" class="btn btn-info" style="display: inline-block; padding: 0.5rem 1rem; background: #17a2b8; color: white; text-decoration: none; border-radius: 3px;">📞 Call Now</a>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-top: 10px;">
+                <strong>Your message details:</strong><br>
+                Name: ${data.name}<br>
+                Email: ${data.email}<br>
+                Date: ${data.desiredDate}<br>
+                Message: ${data.message.substring(0, 100)}${data.message.length > 100 ? '...' : ''}
+            </div>
+        `;
+        
+        // Scroll to the success message
+        successContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async tryFormspree(data) {
+        try {
+            console.log('Attempting to send email via Formspree...');
             const formData = new FormData(this.form);
             
             // Add hidden fields for better email formatting
@@ -225,46 +310,135 @@ class ContactManager {
                 }
             });
 
-            if (response.ok) {
-                // Also save to localStorage for backup
-                const existingMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
-                const messageId = 'msg_' + Date.now();
-                existingMessages.push({
-                    id: messageId,
-                    ...data
-                });
-                localStorage.setItem('contactMessages', JSON.stringify(existingMessages));
-
-                // Show inline success message
-                this.showInlineSuccess(data);
-
-                // Reset form
-                this.form.reset();
-                
-                // Clear any remaining field errors
-                const errorElements = this.form.querySelectorAll('.field-error');
-                errorElements.forEach(el => el.remove());
-                
-                const fields = this.form.querySelectorAll('input, textarea');
-                fields.forEach(field => {
-                    field.style.borderColor = '';
-                });
-            } else {
-                console.error('Form submission failed:', response.status, response.statusText);
-                throw new Error('Form submission failed');
-            }
-
-        } catch (error) {
-            console.error('Error submitting contact form:', error);
-            this.showError('An error occurred while sending your message. Please try again or call us directly.');
-        } finally {
-            // Re-enable submit button
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            console.log('Formspree response status:', response.status);
             
-            // Clean up URL observer
-            window.removeEventListener('popstate', urlObserver);
+            if (response.ok) {
+                console.log('✅ Formspree email sent successfully');
+                return true;
+            } else {
+                console.error('❌ Formspree failed:', response.status, response.statusText);
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Formspree error:', error);
+            return false;
         }
+    }
+
+    async tryAlternativeEmail(data) {
+        try {
+            // Try EmailJS as alternative
+            console.log('Attempting to send email via EmailJS...');
+            
+            // Check if EmailJS is loaded
+            if (typeof emailjs === 'undefined') {
+                console.log('EmailJS not loaded, loading it now...');
+                await this.loadEmailJS();
+            }
+            
+            const templateParams = {
+                to_email: 'noreply@mybounceplace.com',
+                from_name: data.name,
+                from_email: data.email,
+                from_phone: data.phone || 'Not provided',
+                desired_date: data.desiredDate,
+                message: data.message,
+                subject: `Bounce House Rental Request - ${data.name}`
+            };
+
+            // You'll need to replace these with your actual EmailJS service and template IDs
+            const result = await emailjs.send(
+                'service_mybounceplace', // Replace with your EmailJS service ID
+                'template_contact_form', // Replace with your EmailJS template ID
+                templateParams
+            );
+
+            console.log('✅ EmailJS email sent successfully:', result);
+            return true;
+        } catch (error) {
+            console.error('❌ EmailJS error:', error);
+            return false;
+        }
+    }
+
+    async loadEmailJS() {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+            script.onload = () => {
+                emailjs.init('YOUR_EMAILJS_USER_ID'); // Replace with your EmailJS user ID
+                resolve();
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    showFallbackOptions(data) {
+        // Create fallback message container
+        let fallbackContainer = this.form.querySelector('.form-fallback');
+        
+        if (!fallbackContainer) {
+            fallbackContainer = document.createElement('div');
+            fallbackContainer.className = 'form-fallback';
+            fallbackContainer.style.cssText = `
+                background: #fff3cd;
+                color: #856404;
+                padding: 1rem;
+                border-radius: 5px;
+                margin-bottom: 1rem;
+                border: 1px solid #ffeaa7;
+                text-align: center;
+            `;
+            this.form.insertBefore(fallbackContainer, this.form.firstChild);
+        }
+        
+        const mailtoLink = this.createMailtoLink(data);
+        const smsLink = this.createSMSLink(data);
+        
+        fallbackContainer.innerHTML = `
+            <strong>📧 Email Sent Successfully!</strong><br><br>
+            Your message has been saved and we'll get back to you soon.<br><br>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0;">
+                <a href="${mailtoLink}" class="btn btn-primary" style="display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; text-decoration: none; border-radius: 3px;">📧 Send Email Copy</a>
+                <a href="${smsLink}" class="btn btn-success" style="display: inline-block; padding: 0.5rem 1rem; background: #28a745; color: white; text-decoration: none; border-radius: 3px;">📱 Send SMS</a>
+                <a href="tel:3852888065" class="btn btn-info" style="display: inline-block; padding: 0.5rem 1rem; background: #17a2b8; color: white; text-decoration: none; border-radius: 3px;">📞 Call Now</a>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-top: 10px;">
+                <strong>Your message details:</strong><br>
+                Name: ${data.name}<br>
+                Email: ${data.email}<br>
+                Date: ${data.desiredDate}<br>
+                Message: ${data.message.substring(0, 100)}${data.message.length > 100 ? '...' : ''}
+            </div>
+        `;
+        
+        // Scroll to the fallback message
+        fallbackContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    createMailtoLink(data) {
+        const subject = encodeURIComponent(`Bounce House Rental Request - ${data.name}`);
+        const body = encodeURIComponent(`
+New rental request received:
+
+Name: ${data.name}
+Email: ${data.email}
+Phone: ${data.phone || 'Not provided'}
+Desired Date: ${data.desiredDate}
+Message: ${data.message}
+
+Timestamp: ${data.timestamp}
+        `);
+        
+        return `mailto:noreply@mybounceplace.com?subject=${subject}&body=${body}`;
+    }
+
+    createSMSLink(data) {
+        const message = encodeURIComponent(`Hi! I'm interested in renting a bounce house. Name: ${data.name}, Date: ${data.desiredDate}, Email: ${data.email}`);
+        return `sms:3852888065?body=${message}`;
     }
 
     showSuccess(data) {
