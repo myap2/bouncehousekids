@@ -396,6 +396,11 @@ Please respond within 24 hours to confirm availability.
                 dateInput.addEventListener('change', (e) => {
                     this.checkAvailability(e.target.value);
                 });
+                
+                // Reset styling when user starts typing/selecting
+                dateInput.addEventListener('focus', () => {
+                    dateInput.style.cssText = '';
+                });
             }
         }
     }
@@ -411,10 +416,28 @@ Please respond within 24 hours to confirm availability.
         
         const isBlocked = blockedDates.includes(date);
         
-        if (isBlocked) {
-            this.showAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
-        } else {
-            this.showAvailabilityMessage('✅ Available for booking!', 'success');
+        // Add visual styling to the date input
+        const dateInput = document.getElementById('contact-date');
+        if (dateInput) {
+            if (isBlocked) {
+                dateInput.style.cssText = `
+                    background-color: #f8d7da;
+                    border-color: #f5c6cb;
+                    color: #721c24;
+                    text-decoration: line-through;
+                    opacity: 0.7;
+                `;
+                this.showAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
+            } else {
+                dateInput.style.cssText = `
+                    background-color: #d4edda;
+                    border-color: #c3e6cb;
+                    color: #155724;
+                    text-decoration: none;
+                    opacity: 1;
+                `;
+                this.showAvailabilityMessage('✅ Available for booking!', 'success');
+            }
         }
     }
 
