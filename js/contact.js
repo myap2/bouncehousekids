@@ -220,8 +220,19 @@ class ContactManager {
         localStorage.setItem('contactMessages', JSON.stringify(existingMessages));
 
         try {
-            // Show success message with email options
-            this.showEmailOptions(data);
+            // Try to send email automatically
+            console.log('🔄 Attempting to send email...');
+            const emailSent = await this.sendEmailAutomatically(data);
+            
+            if (emailSent) {
+                console.log('✅ Email sent successfully!');
+                // Show success message
+                this.showInlineSuccess(data);
+            } else {
+                console.log('⚠️ Email failed, showing fallback options');
+                // Show email options as fallback
+                this.showEmailOptions(data);
+            }
             
             // Reset form
             this.form.reset();
@@ -245,6 +256,42 @@ class ContactManager {
             
             // Clean up URL observer
             window.removeEventListener('popstate', urlObserver);
+        }
+    }
+
+    async sendEmailAutomatically(data) {
+        try {
+            // Try using Formspree (free service) - using FormData format
+            const formData = new FormData();
+            formData.append('name', data.name);
+            formData.append('email', data.email);
+            formData.append('phone', data.phone);
+            formData.append('desiredDate', data.desiredDate);
+            formData.append('message', data.message);
+            formData.append('_subject', `Bounce House Rental Request - ${data.name}`);
+            formData.append('_replyto', data.email);
+
+            const response = await fetch('https://formspree.io/f/mgvzkqgp', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            console.log('Formspree response status:', response.status);
+            console.log('Formspree response:', response);
+
+            if (response.ok) {
+                console.log('✅ Email sent successfully via Formspree');
+                return true;
+            } else {
+                console.log('❌ Formspree failed, status:', response.status);
+                return false;
+            }
+        } catch (error) {
+            console.log('❌ Email sending failed:', error);
+            return false;
         }
     }
 
@@ -433,7 +480,7 @@ Message: ${data.message}
 Timestamp: ${data.timestamp}
         `);
         
-        return `mailto:noreply@mybounceplace.com?subject=${subject}&body=${body}`;
+        return `mailto:info@mybounceplace.com?subject=${subject}&body=${body}`;
     }
 
     createSMSLink(data) {
