@@ -271,8 +271,8 @@ class ContactManager {
             console.log('📧 Starting email send process...');
             console.log('📋 Form data to send:', data);
             
-            // Try using Formspree (free service) - using FormData format
-            const formData = new FormData();
+            // Try using Formspree (free service) - using URLSearchParams format
+            const formData = new URLSearchParams();
             formData.append('name', data.name);
             formData.append('email', data.email);
             formData.append('phone', data.phone);
@@ -291,6 +291,7 @@ class ContactManager {
                 method: 'POST',
                 body: formData,
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'Accept': 'application/json'
                 }
             });
