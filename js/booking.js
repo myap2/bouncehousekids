@@ -184,7 +184,6 @@ class BookingSystem {
 
     async sendViaFormspree(bookingData) {
         try {
-            console.log('Attempting to send booking via Formspree...');
             const formData = new FormData();
             
             // Add all booking data to form
@@ -205,10 +204,8 @@ class BookingSystem {
                 }
             });
 
-            console.log('Formspree booking response status:', response.status);
             
             if (response.ok) {
-                console.log('✅ Booking sent successfully via Formspree');
                 return true;
             } else {
                 console.error('❌ Formspree booking failed:', response.status, response.statusText);
