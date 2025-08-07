@@ -101,11 +101,49 @@ class BookingSystem {
                 e.preventDefault();
                 this.processBooking(form);
             });
+            
+            // Add availability checker for booking form date input
+            const dateInput = form.querySelector('#booking-date');
+            if (dateInput) {
+                dateInput.addEventListener('change', (e) => {
+                    this.checkBookingAvailability(e.target.value);
+                });
+                
+                // Reset styling when user starts typing/selecting
+                dateInput.addEventListener('focus', () => {
+                    dateInput.style.cssText = '';
+                });
+            }
         }
     }
 
     async processBooking(form) {
         try {
+            // Check if selected date is blocked
+            const eventDate = form.querySelector('#booking-date').value;
+            const blockedDates = [
+                '2025-12-25', // Christmas
+                '2025-12-31', // New Year's Eve
+                '2026-01-01', // New Year's Day
+                '2026-01-15', // Martin Luther King Jr. Day
+                '2026-02-16', // Presidents' Day
+                '2026-05-25', // Memorial Day
+                '2026-07-04', // Independence Day
+                '2026-09-07', // Labor Day
+                '2026-10-12', // Columbus Day
+                '2026-11-11', // Veterans Day
+                '2026-11-26', // Thanksgiving Day
+                '2026-12-25', // Christmas 2026
+                '2026-12-31', // New Year's Eve 2026
+                '2027-01-01', // New Year's Day 2027
+                // Add more blocked dates here as needed
+            ];
+            
+            if (blockedDates.includes(eventDate)) {
+                this.showBookingAvailabilityMessage('❌ Cannot book on this date. Please select another date.', 'error');
+                return;
+            }
+
             // Disable submit button
             const submitBtn = form.querySelector('.submit-btn');
             submitBtn.textContent = 'Sending...';
@@ -411,6 +449,17 @@ Please respond within 24 hours to confirm availability.
             '2025-12-25', // Christmas
             '2025-12-31', // New Year's Eve
             '2026-01-01', // New Year's Day
+            '2026-01-15', // Martin Luther King Jr. Day
+            '2026-02-16', // Presidents' Day
+            '2026-05-25', // Memorial Day
+            '2026-07-04', // Independence Day
+            '2026-09-07', // Labor Day
+            '2026-10-12', // Columbus Day
+            '2026-11-11', // Veterans Day
+            '2026-11-26', // Thanksgiving Day
+            '2026-12-25', // Christmas 2026
+            '2026-12-31', // New Year's Eve 2026
+            '2027-01-01', // New Year's Day 2027
             // Add more blocked dates here as needed
         ];
         
@@ -441,6 +490,53 @@ Please respond within 24 hours to confirm availability.
         }
     }
 
+    async checkBookingAvailability(date) {
+        // List of blocked/unavailable dates
+        const blockedDates = [
+            '2025-12-25', // Christmas
+            '2025-12-31', // New Year's Eve
+            '2026-01-01', // New Year's Day
+            '2026-01-15', // Martin Luther King Jr. Day
+            '2026-02-16', // Presidents' Day
+            '2026-05-25', // Memorial Day
+            '2026-07-04', // Independence Day
+            '2026-09-07', // Labor Day
+            '2026-10-12', // Columbus Day
+            '2026-11-11', // Veterans Day
+            '2026-11-26', // Thanksgiving Day
+            '2026-12-25', // Christmas 2026
+            '2026-12-31', // New Year's Eve 2026
+            '2027-01-01', // New Year's Day 2027
+            // Add more blocked dates here as needed
+        ];
+        
+        const isBlocked = blockedDates.includes(date);
+        
+        // Add visual styling to the booking date input
+        const dateInput = document.getElementById('booking-date');
+        if (dateInput) {
+            if (isBlocked) {
+                dateInput.style.cssText = `
+                    background-color: #f8d7da;
+                    border-color: #f5c6cb;
+                    color: #721c24;
+                    text-decoration: line-through;
+                    opacity: 0.7;
+                `;
+                this.showBookingAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
+            } else {
+                dateInput.style.cssText = `
+                    background-color: #d4edda;
+                    border-color: #c3e6cb;
+                    color: #155724;
+                    text-decoration: none;
+                    opacity: 1;
+                `;
+                this.showBookingAvailabilityMessage('✅ Available for booking!', 'success');
+            }
+        }
+    }
+
     showAvailabilityMessage(message, type) {
         let existingMessage = document.getElementById('availability-message');
         if (existingMessage) {
@@ -459,6 +555,29 @@ Please respond within 24 hours to confirm availability.
         messageDiv.textContent = message;
 
         const dateInput = document.getElementById('contact-date');
+        if (dateInput) {
+            dateInput.parentNode.appendChild(messageDiv);
+        }
+    }
+
+    showBookingAvailabilityMessage(message, type) {
+        let existingMessage = document.getElementById('booking-availability-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'booking-availability-message';
+        messageDiv.style.cssText = `
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            font-weight: bold;
+            ${type === 'success' ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'}
+        `;
+        messageDiv.textContent = message;
+
+        const dateInput = document.getElementById('booking-date');
         if (dateInput) {
             dateInput.parentNode.appendChild(messageDiv);
         }

@@ -185,6 +185,33 @@ class ContactManager {
             }
         }
 
+        // Check if selected date is blocked
+        const dateInput = this.form.querySelector('#contact-date');
+        if (dateInput && dateInput.value) {
+            const blockedDates = [
+                '2025-12-25', // Christmas
+                '2025-12-31', // New Year's Eve
+                '2026-01-01', // New Year's Day
+                '2026-01-15', // Martin Luther King Jr. Day
+                '2026-02-16', // Presidents' Day
+                '2026-05-25', // Memorial Day
+                '2026-07-04', // Independence Day
+                '2026-09-07', // Labor Day
+                '2026-10-12', // Columbus Day
+                '2026-11-11', // Veterans Day
+                '2026-11-26', // Thanksgiving Day
+                '2026-12-25', // Christmas 2026
+                '2026-12-31', // New Year's Eve 2026
+                '2027-01-01', // New Year's Day 2027
+                // Add more blocked dates here as needed
+            ];
+            
+            if (blockedDates.includes(dateInput.value)) {
+                this.showDateAvailabilityMessage('❌ Cannot submit form with blocked date. Please select another date.', 'error');
+                isValid = false;
+            }
+        }
+
         return isValid;
     }
 
@@ -553,6 +580,86 @@ class ContactManager {
             
             // Set placeholder text
             dateInput.setAttribute('placeholder', 'Select your desired rental date');
+            
+            // Add blocked dates functionality
+            dateInput.addEventListener('change', (e) => {
+                this.checkDateAvailability(e.target.value);
+            });
+            
+            // Reset styling when user starts typing/selecting
+            dateInput.addEventListener('focus', () => {
+                dateInput.style.cssText = '';
+            });
+        }
+    }
+
+    checkDateAvailability(date) {
+        // List of blocked/unavailable dates
+        const blockedDates = [
+            '2025-12-25', // Christmas
+            '2025-12-31', // New Year's Eve
+            '2026-01-01', // New Year's Day
+            '2026-01-15', // Martin Luther King Jr. Day
+            '2026-02-16', // Presidents' Day
+            '2026-05-25', // Memorial Day
+            '2026-07-04', // Independence Day
+            '2026-09-07', // Labor Day
+            '2026-10-12', // Columbus Day
+            '2026-11-11', // Veterans Day
+            '2026-11-26', // Thanksgiving Day
+            '2026-12-25', // Christmas 2026
+            '2026-12-31', // New Year's Eve 2026
+            '2027-01-01', // New Year's Day 2027
+            // Add more blocked dates here as needed
+        ];
+        
+        const isBlocked = blockedDates.includes(date);
+        
+        // Add visual styling to the date input
+        const dateInput = document.getElementById('contact-date');
+        if (dateInput) {
+            if (isBlocked) {
+                dateInput.style.cssText = `
+                    background-color: #f8d7da;
+                    border-color: #f5c6cb;
+                    color: #721c24;
+                    text-decoration: line-through;
+                    opacity: 0.7;
+                `;
+                this.showDateAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
+            } else {
+                dateInput.style.cssText = `
+                    background-color: #d4edda;
+                    border-color: #c3e6cb;
+                    color: #155724;
+                    text-decoration: none;
+                    opacity: 1;
+                `;
+                this.showDateAvailabilityMessage('✅ Available for booking!', 'success');
+            }
+        }
+    }
+
+    showDateAvailabilityMessage(message, type) {
+        let existingMessage = document.getElementById('date-availability-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'date-availability-message';
+        messageDiv.style.cssText = `
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            font-weight: bold;
+            ${type === 'success' ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'}
+        `;
+        messageDiv.textContent = message;
+
+        const dateInput = document.getElementById('contact-date');
+        if (dateInput) {
+            dateInput.parentNode.appendChild(messageDiv);
         }
     }
 }
