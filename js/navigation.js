@@ -12,6 +12,12 @@ class NavigationManager {
         
         // Handle browser back/forward buttons
         window.addEventListener('popstate', (event) => {
+            // Clear URL parameters when using browser navigation
+            if (window.location.search) {
+                const cleanUrl = window.location.pathname + window.location.hash;
+                window.history.replaceState(null, '', cleanUrl);
+            }
+            
             const page = event.state?.page || 'home';
             this.showPage(page, false);
         });
@@ -76,6 +82,12 @@ class NavigationManager {
     }
 
         showPage(pageName, updateHistory = true) {
+        // Clear URL parameters when navigating to a new page
+        if (updateHistory && window.location.search) {
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState(null, '', cleanUrl);
+        }
+        
         // Hide all pages
         const pages = document.querySelectorAll('.page');
         pages.forEach(page => {
