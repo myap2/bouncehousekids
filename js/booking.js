@@ -401,13 +401,20 @@ Please respond within 24 hours to confirm availability.
     }
 
     async checkAvailability(date) {
-        // Simulate availability check
-        const available = Math.random() > 0.3; // 70% availability for demo
+        // List of blocked/unavailable dates
+        const blockedDates = [
+            '2024-12-25', // Christmas
+            '2024-12-31', // New Year's Eve
+            '2025-01-01', // New Year's Day
+            // Add more blocked dates here as needed
+        ];
         
-        if (available) {
-            this.showAvailabilityMessage('✅ Available for booking!', 'success');
-        } else {
+        const isBlocked = blockedDates.includes(date);
+        
+        if (isBlocked) {
             this.showAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
+        } else {
+            this.showAvailabilityMessage('✅ Available for booking!', 'success');
         }
     }
 
