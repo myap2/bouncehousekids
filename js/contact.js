@@ -35,20 +35,6 @@ class ContactManager {
             return false;
         });
         
-        // Also prevent submit on button click
-        const submitBtn = this.form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', (e) => {
-                console.log('🔘 Submit button clicked');
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                console.log('🛑 Button click prevented');
-                this.handleSubmit();
-                return false;
-            });
-        }
-        
         console.log('📋 Form submit listener added');
 
         // Add input validation listeners
