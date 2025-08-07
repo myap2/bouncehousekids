@@ -9,30 +9,56 @@ class ContactManager {
     }
 
     setupForm() {
+        console.log('🔧 Setting up contact form...');
+        
         this.form = document.getElementById('contact-form');
-        if (!this.form) return;
+        if (!this.form) {
+            console.log('❌ Contact form not found!');
+            return;
+        }
+        
+        console.log('✅ Contact form found:', this.form);
 
         // Prevent default form submission to avoid redirecting and URL params
         this.form.addEventListener('submit', (e) => {
+            console.log('📝 Form submit event triggered');
             e.preventDefault();
             e.stopPropagation();
+            console.log('🛑 Default form submission prevented');
             this.handleSubmit();
             return false;
         });
+        
+        console.log('📋 Form submit listener added');
 
         // Add input validation listeners
         this.setupInputListeners();
         
         // Set minimum date to today
         this.setupDatePicker();
+        
+        console.log('✅ Form setup complete');
     }
 
     setupInputListeners() {
+        console.log('🎯 Setting up input listeners...');
+        
         const inputs = this.form.querySelectorAll('input, textarea');
-        inputs.forEach(input => {
-            input.addEventListener('blur', () => this.validateField(input));
-            input.addEventListener('input', () => this.clearFieldError(input));
+        console.log(`📝 Found ${inputs.length} form inputs:`, inputs);
+        
+        inputs.forEach((input, index) => {
+            console.log(`📋 Setting up input ${index + 1}:`, input.name, input.type);
+            input.addEventListener('blur', () => {
+                console.log(`🔍 Validating field: ${input.name}`);
+                this.validateField(input);
+            });
+            input.addEventListener('input', () => {
+                console.log(`🧹 Clearing error for field: ${input.name}`);
+                this.clearFieldError(input);
+            });
         });
+        
+        console.log('✅ Input listeners setup complete');
     }
 
     validateField(field) {
@@ -281,6 +307,12 @@ class ContactManager {
         try {
             console.log('📧 Starting email send process...');
             console.log('📋 Form data to send:', data);
+            console.log('🔍 Data validation:');
+            console.log('  - Name:', data.name ? '✅' : '❌');
+            console.log('  - Email:', data.email ? '✅' : '❌');
+            console.log('  - Address:', data.address ? '✅' : '❌');
+            console.log('  - Date:', data.desiredDate ? '✅' : '❌');
+            console.log('  - Message:', data.message ? '✅' : '❌');
             
             // Try using Formspree (free service) - using URLSearchParams format
             const formData = new URLSearchParams();
@@ -299,6 +331,13 @@ class ContactManager {
                 console.log(`  ${key}: ${value}`);
             }
 
+            console.log('🌐 Making fetch request to Formspree...');
+            console.log('📤 Request method: POST');
+            console.log('📤 Request headers:', {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            });
+            
             const response = await fetch('https://formspree.io/f/mgvzkqgp', {
                 method: 'POST',
                 body: formData,
@@ -308,10 +347,12 @@ class ContactManager {
                 }
             });
 
-            console.log('📡 Formspree response status:', response.status);
-            console.log('📡 Formspree response headers:', response.headers);
-            console.log('📡 Formspree response ok:', response.ok);
-            console.log('📡 Formspree response type:', response.type);
+            console.log('📡 Formspree response received!');
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response statusText:', response.statusText);
+            console.log('📡 Response ok:', response.ok);
+            console.log('📡 Response type:', response.type);
+            console.log('📡 Response headers:', response.headers);
 
             // Try to get response text for debugging
             try {
@@ -604,16 +645,26 @@ class ContactManager {
 
 // Initialize contact manager
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM Content Loaded - Initializing Contact Manager');
+    
     window.ContactManager = new ContactManager();
+    console.log('📦 ContactManager instance created');
+    
     window.ContactManager.init(); // Initialize the contact manager
+    console.log('✅ ContactManager initialized');
 
     // Optional: Add phone number formatting
     const phoneInput = document.getElementById('contact-phone');
     if (phoneInput) {
+        console.log('📞 Phone input found, adding formatting');
         phoneInput.addEventListener('input', (e) => {
             if (window.ContactManager) {
                 window.ContactManager.formatPhoneNumber(e.target);
             }
         });
+    } else {
+        console.log('⚠️ Phone input not found');
     }
+    
+    console.log('🎯 Contact form setup complete');
 });
