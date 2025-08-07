@@ -73,6 +73,16 @@ class ContactManager {
                 }
                 break;
 
+            case 'address':
+                if (!value) {
+                    errorMessage = 'Event address is required';
+                    isValid = false;
+                } else if (value.length < 10) {
+                    errorMessage = 'Please provide a complete address';
+                    isValid = false;
+                }
+                break;
+
             case 'message':
                 if (!value) {
                     errorMessage = 'Message is required';
@@ -152,7 +162,7 @@ class ContactManager {
 
     validateForm() {
         const formData = new FormData(this.form);
-        const fields = ['name', 'email', 'desiredDate', 'message']; // phone is optional
+        const fields = ['name', 'email', 'address', 'desiredDate', 'message']; // phone is optional
         let isValid = true;
 
         fields.forEach(fieldName => {
@@ -179,6 +189,7 @@ class ContactManager {
             name: formData.get('name')?.trim() || '',
             email: formData.get('email')?.trim() || '',
             phone: formData.get('phone')?.trim() || '',
+            address: formData.get('address')?.trim() || '',
             desiredDate: formData.get('desiredDate') || '',
             message: formData.get('message')?.trim() || '',
             timestamp: new Date().toISOString()
@@ -276,6 +287,7 @@ class ContactManager {
             formData.append('name', data.name);
             formData.append('email', data.email);
             formData.append('phone', data.phone);
+            formData.append('address', data.address);
             formData.append('desiredDate', data.desiredDate);
             formData.append('message', data.message);
             formData.append('_subject', `Bounce House Rental Request - ${data.name}`);
@@ -345,23 +357,15 @@ class ContactManager {
             this.form.insertBefore(successContainer, this.form.firstChild);
         }
         
-        const mailtoLink = this.createMailtoLink(data);
-        const smsLink = this.createSMSLink(data);
-        
         successContainer.innerHTML = `
             <strong>✅ Message Sent Successfully!</strong><br><br>
-            Your message has been saved. To ensure we receive it, please send us an email:<br><br>
-            
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0;">
-                <a href="${mailtoLink}" class="btn btn-primary" style="display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; text-decoration: none; border-radius: 3px;">📧 Send Email</a>
-                <a href="${smsLink}" class="btn btn-success" style="display: inline-block; padding: 0.5rem 1rem; background: #28a745; color: white; text-decoration: none; border-radius: 3px;">📱 Send SMS</a>
-                <a href="tel:3852888065" class="btn btn-info" style="display: inline-block; padding: 0.5rem 1rem; background: #17a2b8; color: white; text-decoration: none; border-radius: 3px;">📞 Call Now</a>
-            </div>
+            Your message has been saved and we'll get back to you soon.<br><br>
             
             <div style="font-size: 0.9rem; margin-top: 10px;">
                 <strong>Your message details:</strong><br>
                 Name: ${data.name}<br>
                 Email: ${data.email}<br>
+                Address: ${data.address}<br>
                 Date: ${data.desiredDate}<br>
                 Message: ${data.message.substring(0, 100)}${data.message.length > 100 ? '...' : ''}
             </div>
@@ -471,23 +475,15 @@ class ContactManager {
             this.form.insertBefore(fallbackContainer, this.form.firstChild);
         }
         
-        const mailtoLink = this.createMailtoLink(data);
-        const smsLink = this.createSMSLink(data);
-        
         fallbackContainer.innerHTML = `
             <strong>📧 Email Sent Successfully!</strong><br><br>
             Your message has been saved and we'll get back to you soon.<br><br>
-            
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0;">
-                <a href="${mailtoLink}" class="btn btn-primary" style="display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; text-decoration: none; border-radius: 3px;">📧 Send Email Copy</a>
-                <a href="${smsLink}" class="btn btn-success" style="display: inline-block; padding: 0.5rem 1rem; background: #28a745; color: white; text-decoration: none; border-radius: 3px;">📱 Send SMS</a>
-                <a href="tel:3852888065" class="btn btn-info" style="display: inline-block; padding: 0.5rem 1rem; background: #17a2b8; color: white; text-decoration: none; border-radius: 3px;">📞 Call Now</a>
-            </div>
             
             <div style="font-size: 0.9rem; margin-top: 10px;">
                 <strong>Your message details:</strong><br>
                 Name: ${data.name}<br>
                 Email: ${data.email}<br>
+                Address: ${data.address}<br>
                 Date: ${data.desiredDate}<br>
                 Message: ${data.message.substring(0, 100)}${data.message.length > 100 ? '...' : ''}
             </div>
@@ -497,27 +493,7 @@ class ContactManager {
         fallbackContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    createMailtoLink(data) {
-        const subject = encodeURIComponent(`Bounce House Rental Request - ${data.name}`);
-        const body = encodeURIComponent(`
-New rental request received:
 
-Name: ${data.name}
-Email: ${data.email}
-Phone: ${data.phone || 'Not provided'}
-Desired Date: ${data.desiredDate}
-Message: ${data.message}
-
-Timestamp: ${data.timestamp}
-        `);
-        
-        return `mailto:info@mybounceplace.com?subject=${subject}&body=${body}`;
-    }
-
-    createSMSLink(data) {
-        const message = encodeURIComponent(`Hi! I'm interested in renting a bounce house. Name: ${data.name}, Date: ${data.desiredDate}, Email: ${data.email}`);
-        return `sms:3852888065?body=${message}`;
-    }
 
     showSuccess(data) {
         const modal = document.getElementById('success-modal');
