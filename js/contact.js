@@ -1,3 +1,5 @@
+console.log('📜 Contact.js file loaded successfully!');
+
 // Contact Form Management - replaces server-side form processing
 class ContactManager {
     constructor() {
@@ -19,15 +21,33 @@ class ContactManager {
         
         console.log('✅ Contact form found:', this.form);
 
+        // Remove any existing submit listeners
+        this.form.removeEventListener('submit', this.handleSubmit);
+        
         // Prevent default form submission to avoid redirecting and URL params
         this.form.addEventListener('submit', (e) => {
             console.log('📝 Form submit event triggered');
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
             console.log('🛑 Default form submission prevented');
             this.handleSubmit();
             return false;
         });
+        
+        // Also prevent submit on button click
+        const submitBtn = this.form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', (e) => {
+                console.log('🔘 Submit button clicked');
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                console.log('🛑 Button click prevented');
+                this.handleSubmit();
+                return false;
+            });
+        }
         
         console.log('📋 Form submit listener added');
 
@@ -646,6 +666,10 @@ class ContactManager {
 // Initialize contact manager
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM Content Loaded - Initializing Contact Manager');
+    
+    // Test if form exists
+    const testForm = document.getElementById('contact-form');
+    console.log('🔍 Form found on DOMContentLoaded:', testForm);
     
     window.ContactManager = new ContactManager();
     console.log('📦 ContactManager instance created');
