@@ -186,13 +186,18 @@ class ContactManager {
     }
 
     async handleSubmit() {
+        console.log('🚀 Form submission started');
+        
         // Validate form
         if (!this.validateForm()) {
+            console.log('❌ Form validation failed');
             return;
         }
+        console.log('✅ Form validation passed');
 
         // Collect form data
         const data = this.collectFormData();
+        console.log('📋 Collected form data:', data);
 
         // Prevent any URL changes
         const currentUrl = window.location.href;
@@ -208,6 +213,7 @@ class ContactManager {
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending...';
+        console.log('🔒 Submit button disabled');
 
         // Save to localStorage first (always do this)
         const existingMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
@@ -218,6 +224,7 @@ class ContactManager {
             status: 'sent'
         });
         localStorage.setItem('contactMessages', JSON.stringify(existingMessages));
+        console.log('💾 Message saved to localStorage with ID:', messageId);
 
         try {
             // Try to send email automatically
@@ -261,6 +268,9 @@ class ContactManager {
 
     async sendEmailAutomatically(data) {
         try {
+            console.log('📧 Starting email send process...');
+            console.log('📋 Form data to send:', data);
+            
             // Try using Formspree (free service) - using FormData format
             const formData = new FormData();
             formData.append('name', data.name);
@@ -271,6 +281,12 @@ class ContactManager {
             formData.append('_subject', `Bounce House Rental Request - ${data.name}`);
             formData.append('_replyto', data.email);
 
+            console.log('📤 Sending to Formspree URL: https://formspree.io/f/mgvzkqgp');
+            console.log('📦 FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+
             const response = await fetch('https://formspree.io/f/mgvzkqgp', {
                 method: 'POST',
                 body: formData,
@@ -279,18 +295,32 @@ class ContactManager {
                 }
             });
 
-            console.log('Formspree response status:', response.status);
-            console.log('Formspree response:', response);
+            console.log('📡 Formspree response status:', response.status);
+            console.log('📡 Formspree response headers:', response.headers);
+            console.log('📡 Formspree response ok:', response.ok);
+            console.log('📡 Formspree response type:', response.type);
+
+            // Try to get response text for debugging
+            try {
+                const responseText = await response.text();
+                console.log('📡 Formspree response body:', responseText);
+            } catch (textError) {
+                console.log('📡 Could not read response body:', textError);
+            }
 
             if (response.ok) {
                 console.log('✅ Email sent successfully via Formspree');
                 return true;
             } else {
                 console.log('❌ Formspree failed, status:', response.status);
+                console.log('❌ Formspree failed, statusText:', response.statusText);
                 return false;
             }
         } catch (error) {
-            console.log('❌ Email sending failed:', error);
+            console.log('❌ Email sending failed with error:', error);
+            console.log('❌ Error name:', error.name);
+            console.log('❌ Error message:', error.message);
+            console.log('❌ Error stack:', error.stack);
             return false;
         }
     }
