@@ -164,7 +164,8 @@
     "payment_methods": [
         "Cash",
         "Credit Card", 
-        "Check"
+        "Check",
+        "Venmo (@Kristy-Yap)"
     ],
     "additional_fees": {
         "delivery_outside_service_area": "$2 per mile (one-way)",
