@@ -71,7 +71,7 @@ const faqData = [
     },
     {
         question: 'What are your payment terms?',
-        answer: 'We require a deposit to secure your booking, with the balance due on the day of delivery. We accept cash, check, and major credit cards.'
+        answer: 'We require a deposit to secure your booking, with the balance due on the day of delivery. We accept cash, check, major credit cards, and Venmo.'
     }
 ];
 
