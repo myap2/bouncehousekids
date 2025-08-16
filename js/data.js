@@ -44,7 +44,7 @@ const companyInfo = {
     phone: '(385) 288-8065',
     email: 'noreply@mybounceplace.com',
     hours: 'Monday - Sunday, 8:00 AM - 8:00 PM',
-    serviceArea: 'Greater metropolitan area with free delivery and setup within 20 miles'
+    serviceArea: 'Greater metropolitan area with free delivery and setup within 15 miles'
 };
 
 // FAQ data
@@ -78,11 +78,11 @@ const faqData = [
 // Waiver template text
 const waiverText = `BOUNCE HOUSE LIABILITY WAIVER
 
-I, the undersigned, acknowledge and fully understand that participation in bounce house activities involves risks of injury. I agree to assume all risks and hazards incidental to such participation, including but not limited to physical injury, property damage, or loss.
+By signing, I acknowledge that using inflatable equipment involves risk. I agree to supervise all participants, follow safety rules, and stop use if conditions become unsafe.
 
-I hereby release, waive, discharge, and covenant not to sue My Bounce Place, its owners, employees, and agents from any and all liability, claims, demands, actions, and causes of action whatsoever arising out of or related to any loss, damage, or injury that may be sustained while using the bounce house equipment.
+I release and hold harmless My Bounce Place, its owners, employees, and agents from any claims arising from use of the equipment.
 
-I certify that I am at least 18 years of age (or the parent/guardian of the participant) and have read and voluntarily sign this waiver and release of liability.
+I am at least 18 years old (or the parent/guardian of the participant) and I sign this waiver voluntarily.
 
 Date: ________________
 Participant Name: __________________________

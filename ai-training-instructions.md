@@ -46,7 +46,7 @@ My Bounce Place is a bounce house rental service located in Logan, Utah. We serv
 ### Common Questions & Answers
 1. **Booking**: Recommend 2-3 weeks advance notice
 2. **Weather**: Severe weather may require rescheduling
-3. **Delivery**: Free within 20 miles of Logan
+3. **Delivery**: Free within 15 miles of Logan
 4. **Setup**: Requires flat, level surface
 5. **Payment**: Cash, credit card, check, and Venmo accepted
 
