@@ -103,7 +103,7 @@
         },
         {
             "question": "What areas do you serve in Utah?",
-            "answer": "We serve Logan, Utah and surrounding areas including Cache Valley, Smithfield, Hyrum, Providence, and North Logan. Free delivery and setup within 20 miles of Logan."
+            "answer": "We serve Logan, Utah and surrounding areas including Cache Valley, Smithfield, Hyrum, Providence, and North Logan. Free delivery and setup within 15 miles of Logan."
         },
         {
             "question": "How much does a bounce house rental cost?",
@@ -164,7 +164,8 @@
     "payment_methods": [
         "Cash",
         "Credit Card", 
-        "Check"
+        "Check",
+        "Venmo (@Kristy-Yap)"
     ],
     "additional_fees": {
         "delivery_outside_service_area": "$2 per mile (one-way)",
