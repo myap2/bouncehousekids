@@ -22,7 +22,11 @@ const bounceHouses = [
             weekend: 200
         },
         images: [
-            'images/princess-castle-1.jpg'
+            'images/2025-08-16_13-53-15_509.heic',
+            'images/2025-08-16_13-53-27_996.heic',
+            'images/2025-08-16_13-53-32_338.heic',
+            'images/2025-08-16_13-53-41_604.heic',
+            'images/2025-08-16_13-53-51_371.heic'
         ],
         features: [
             'Slide included',
