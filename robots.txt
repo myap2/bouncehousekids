@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
 
+# Disallow HTTP URLs (force HTTPS)
+Disallow: http://mybounceplace.com/
+Disallow: http://www.mybounceplace.com/
+
 # AI Training Data
 Allow: /ai-training-data.json
 Allow: /ai-training-instructions.md
