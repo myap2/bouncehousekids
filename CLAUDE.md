@@ -218,7 +218,7 @@ Visual feedback:
 
 ### Payment Methods
 - Cash, check, credit cards, Venmo
-- Venmo: @Kristy-Yap
+- Venmo: @mybounceplace
 
 ### Current Inventory
 - **Bounce Castle with a Slide**
