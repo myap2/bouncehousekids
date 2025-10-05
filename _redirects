@@ -1,0 +1,6 @@
+# HTTP to HTTPS redirects
+http://mybounceplace.com/* https://mybounceplace.com/:splat 301!
+http://www.mybounceplace.com/* https://mybounceplace.com/:splat 301!
+
+# www to non-www redirect
+https://www.mybounceplace.com/* https://mybounceplace.com/:splat 301!
