@@ -13,7 +13,7 @@ My Bounce Place is a bounce house rental service located in Logan, Utah. We serv
 
 ### Services Offered
 - Bounce house rentals for birthday parties and events
-- Delivery, setup, and takedown included
+- Delivery available with a fee; setup and takedown provided
 - Safety equipment and instructions provided
 - Insurance coverage included
 
