@@ -59,7 +59,7 @@ const faqData = [
     },
     {
         question: 'What\'s included in the rental?',
-        answer: 'Our rental includes the bounce house, delivery, setup, takedown, and all necessary equipment (blower, stakes, extension cords). We also provide safety instructions and guidelines.'
+        answer: 'Our rental includes the bounce house, setup, takedown, and all necessary equipment (blower, stakes, extension cords). Delivery is available; a delivery fee applies based on location. We also provide safety instructions and guidelines.'
     },
     {
         question: 'What if it rains on my event day?',

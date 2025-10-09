@@ -24,7 +24,7 @@
             "North Logan, Utah",
             "Cache Valley, Utah"
         ],
-        "description": "Premier bounce house rental service in Logan, Utah. We provide safe, clean, and affordable inflatable rentals for birthday parties, events, and celebrations throughout Cache Valley. Our services include delivery, setup, and takedown of bounce houses."
+        "description": "Premier bounce house rental service in Logan, Utah. We provide safe, clean, and affordable inflatable rentals for birthday parties, events, and celebrations throughout Cache Valley. Delivery available; fee based on location. Setup and takedown provided."
     },
     "services": {
         "bounce_house_rentals": {
@@ -57,7 +57,7 @@
                     "currency": "USD",
                     "duration": "Up to 8 hours",
                     "includes": [
-                        "Delivery",
+                        "Delivery available (fee based on location)",
                         "Setup",
                         "Takedown",
                         "Safety equipment",
@@ -95,7 +95,7 @@
         },
         {
             "question": "What's included in the bounce house rental?",
-            "answer": "Our rental includes the bounce house, delivery, setup, takedown, and all necessary equipment (blower, stakes, extension cords). We also provide safety instructions and guidelines."
+            "answer": "Our rental includes the bounce house, setup, takedown, and all necessary equipment (blower, stakes, extension cords). Delivery is available; a delivery fee applies based on location. We also provide safety instructions and guidelines."
         },
         {
             "question": "What if it rains on my event day?",
@@ -107,7 +107,7 @@
         },
         {
             "question": "How much does a bounce house rental cost?",
-            "answer": "Our prices start at $150 for daily rentals, $200 for weekend rentals, and $800 for weekly rentals. All prices include delivery, setup, and takedown within our service area."
+            "answer": "Our prices start at $150 for daily rentals, $200 for weekend rentals, and $800 for weekly rentals. Delivery fee applies based on location; setup and takedown provided."
         },
         {
             "question": "What safety measures do you have?",
