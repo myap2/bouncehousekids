@@ -48,7 +48,7 @@ const companyInfo = {
     phone: '(385) 288-8065',
     email: 'noreply@mybounceplace.com',
     hours: 'Monday - Sunday, 8:00 AM - 8:00 PM',
-    serviceArea: 'Greater metropolitan area with free delivery and setup within 15 miles'
+    serviceArea: 'Delivery & setup fee: $20 inside Cache Valley or within 15 miles of Logan; $50 outside Cache Valley'
 };
 
 // FAQ data
