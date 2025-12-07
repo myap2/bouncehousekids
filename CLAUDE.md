@@ -218,8 +218,8 @@ Visual feedback:
 ### Service Area
 - Primary: Logan, Utah
 - Also serves: Smithfield, Hyrum, Providence, North Logan, Cache Valley
-- Free delivery within 15 miles of Logan
-- Additional charge: $2 per mile beyond service area
+- Delivery & setup fee: $20 inside Cache Valley or within 15 miles of Logan
+- Delivery & setup fee: $50 outside Cache Valley
 
 ### Pricing
 - **Daily Rental**: $150 (up to 8 hours)
