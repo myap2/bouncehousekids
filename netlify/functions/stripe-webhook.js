@@ -1,6 +1,8 @@
 const { supabase } = require('./_shared/supabase');
 const { stripe } = require('./_shared/stripe');
 const { sendBookingConfirmation } = require('./_shared/email');
+const { createCalendarEvent } = require('./_shared/google-calendar');
+const { sendBookingConfirmationSMS, sendAdminNewBookingSMS } = require('./_shared/sms');
 
 exports.handler = async (event) => {
   const headers = {
@@ -80,6 +82,22 @@ exports.handler = async (event) => {
           // Send confirmation emails
           if (booking) {
             await sendBookingConfirmation(booking);
+
+            // Create Google Calendar event
+            const calendarResult = await createCalendarEvent(booking);
+            if (calendarResult && calendarResult.eventId) {
+              // Store calendar event ID in booking record
+              await supabase
+                .from('bookings')
+                .update({
+                  google_calendar_event_id: calendarResult.eventId,
+                })
+                .eq('id', bookingId);
+            }
+
+            // Send SMS confirmations
+            await sendBookingConfirmationSMS(booking);
+            await sendAdminNewBookingSMS(booking);
           }
         } else {
           // No database - just log

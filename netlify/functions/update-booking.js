@@ -1,6 +1,8 @@
 const { supabase } = require('./_shared/supabase');
 const { verifyToken, getTokenFromHeaders } = require('./_shared/auth');
 const { sendEmail } = require('./_shared/email');
+const { cancelCalendarEvent } = require('./_shared/google-calendar');
+const { sendCancellationSMS } = require('./_shared/sms');
 
 exports.handler = async (event) => {
   const headers = {
@@ -76,6 +78,14 @@ exports.handler = async (event) => {
 
     if (error) {
       throw error;
+    }
+
+    // If booking is cancelled, mark the Google Calendar event as cancelled and send SMS
+    if (status === 'cancelled') {
+      if (booking.google_calendar_event_id) {
+        await cancelCalendarEvent(booking.google_calendar_event_id);
+      }
+      await sendCancellationSMS(booking);
     }
 
     // Send notification email if requested

@@ -7,6 +7,7 @@ const AdminDashboard = {
   currentYear: new Date().getFullYear(),
   bookings: [],
   blockedDates: [],
+  promoCodes: [],
 
   // Initialize
   init() {
@@ -151,6 +152,9 @@ const AdminDashboard = {
         break;
       case 'blocked-dates':
         this.loadBlockedDates();
+        break;
+      case 'promo-codes':
+        this.loadPromoCodes();
         break;
     }
   },
@@ -659,6 +663,273 @@ const AdminDashboard = {
       day: 'numeric',
       year: 'numeric',
     });
+  },
+
+  // ========== PROMO CODES MANAGEMENT ==========
+
+  // Load promo codes
+  async loadPromoCodes() {
+    const container = document.getElementById('promo-codes-list');
+    container.innerHTML = '<div class="loading">Loading...</div>';
+
+    try {
+      const response = await fetch(`${this.API_BASE}/manage-promo-codes`, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.logout();
+          return;
+        }
+        throw new Error('Failed to fetch promo codes');
+      }
+
+      const data = await response.json();
+      this.promoCodes = data.promoCodes || [];
+
+      if (this.promoCodes.length === 0) {
+        container.innerHTML = '<div class="empty-state"><h3>No promo codes</h3><p>Click "Add Promo Code" to create one.</p></div>';
+      } else {
+        container.innerHTML = this.renderPromoCodesTable(this.promoCodes);
+      }
+
+    } catch (error) {
+      console.error('Error loading promo codes:', error);
+      container.innerHTML = '<div class="empty-state"><h3>Error loading promo codes</h3><p>Please try again.</p></div>';
+    }
+  },
+
+  // Render promo codes table
+  renderPromoCodesTable(promoCodes) {
+    return `
+      <table class="promo-codes-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Description</th>
+            <th>Discount</th>
+            <th>Uses</th>
+            <th>Valid Until</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${promoCodes.map(p => `
+            <tr>
+              <td><span class="promo-code">${p.code}</span></td>
+              <td>${p.description || '-'}</td>
+              <td>${p.discount_type === 'percentage' ? p.discount_value + '%' : '$' + p.discount_value}</td>
+              <td>${p.uses_count || 0}${p.max_uses ? '/' + p.max_uses : ''}</td>
+              <td>${p.valid_until ? this.formatDate(p.valid_until) : 'No expiry'}</td>
+              <td class="${p.is_active ? 'promo-active' : 'promo-inactive'}">${p.is_active ? 'Active' : 'Inactive'}</td>
+              <td>
+                <button class="action-btn edit" onclick="AdminDashboard.editPromo('${p.id}')">Edit</button>
+                <button class="action-btn delete" onclick="AdminDashboard.deletePromo('${p.id}')">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  },
+
+  // Show add promo modal
+  showAddPromoModal() {
+    document.getElementById('promo-modal-title').textContent = 'Add Promo Code';
+    document.getElementById('promo-id').value = '';
+    document.getElementById('promo-code').value = '';
+    document.getElementById('promo-code').disabled = false;
+    document.getElementById('promo-description').value = '';
+    document.getElementById('promo-discount-type').value = 'percentage';
+    document.getElementById('promo-discount-value').value = '';
+    document.getElementById('promo-min-order').value = '';
+    document.getElementById('promo-max-uses').value = '';
+    document.getElementById('promo-valid-from').value = '';
+    document.getElementById('promo-valid-until').value = '';
+    document.getElementById('promo-error').style.display = 'none';
+    document.getElementById('promo-submit-btn').textContent = 'Create Promo Code';
+
+    // Setup form handler
+    const form = document.getElementById('promo-form');
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      this.savePromo();
+    };
+
+    document.getElementById('promo-modal').classList.add('show');
+  },
+
+  // Close promo modal
+  closePromoModal() {
+    document.getElementById('promo-modal').classList.remove('show');
+  },
+
+  // Edit promo code
+  editPromo(promoId) {
+    const promo = this.promoCodes.find(p => p.id === promoId);
+    if (!promo) return;
+
+    document.getElementById('promo-modal-title').textContent = 'Edit Promo Code';
+    document.getElementById('promo-id').value = promo.id;
+    document.getElementById('promo-code').value = promo.code;
+    document.getElementById('promo-code').disabled = true;
+    document.getElementById('promo-description').value = promo.description || '';
+    document.getElementById('promo-discount-type').value = promo.discount_type;
+    document.getElementById('promo-discount-value').value = promo.discount_value;
+    document.getElementById('promo-min-order').value = promo.min_order_amount || '';
+    document.getElementById('promo-max-uses').value = promo.max_uses || '';
+    document.getElementById('promo-valid-from').value = promo.valid_from || '';
+    document.getElementById('promo-valid-until').value = promo.valid_until || '';
+    document.getElementById('promo-error').style.display = 'none';
+    document.getElementById('promo-submit-btn').textContent = 'Update Promo Code';
+
+    // Setup form handler
+    const form = document.getElementById('promo-form');
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      this.savePromo();
+    };
+
+    document.getElementById('promo-modal').classList.add('show');
+  },
+
+  // Save promo code (create or update)
+  async savePromo() {
+    const promoId = document.getElementById('promo-id').value;
+    const code = document.getElementById('promo-code').value.trim().toUpperCase();
+    const description = document.getElementById('promo-description').value.trim();
+    const discountType = document.getElementById('promo-discount-type').value;
+    const discountValue = parseFloat(document.getElementById('promo-discount-value').value);
+    const minOrderAmount = parseFloat(document.getElementById('promo-min-order').value) || 0;
+    const maxUses = parseInt(document.getElementById('promo-max-uses').value) || null;
+    const validFrom = document.getElementById('promo-valid-from').value || null;
+    const validUntil = document.getElementById('promo-valid-until').value || null;
+    const errorDiv = document.getElementById('promo-error');
+    const submitBtn = document.getElementById('promo-submit-btn');
+
+    // Validate
+    if (!code || !discountValue) {
+      errorDiv.textContent = 'Code and discount value are required';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    errorDiv.style.display = 'none';
+
+    try {
+      const isUpdate = !!promoId;
+      const method = isUpdate ? 'PUT' : 'POST';
+      const body = isUpdate ? {
+        id: promoId,
+        description,
+        discountType,
+        discountValue,
+        minOrderAmount,
+        maxUses,
+        validFrom,
+        validUntil,
+      } : {
+        code,
+        description,
+        discountType,
+        discountValue,
+        minOrderAmount,
+        maxUses,
+        validFrom,
+        validUntil,
+      };
+
+      const response = await fetch(`${this.API_BASE}/manage-promo-codes`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save promo code');
+      }
+
+      this.closePromoModal();
+      await this.loadPromoCodes();
+      alert(isUpdate ? 'Promo code updated!' : 'Promo code created!');
+
+    } catch (error) {
+      console.error('Error saving promo code:', error);
+      errorDiv.textContent = error.message;
+      errorDiv.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = promoId ? 'Update Promo Code' : 'Create Promo Code';
+    }
+  },
+
+  // Delete promo code
+  async deletePromo(promoId) {
+    if (!confirm('Are you sure you want to delete this promo code?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${this.API_BASE}/manage-promo-codes`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`,
+        },
+        body: JSON.stringify({ id: promoId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete promo code');
+      }
+
+      await this.loadPromoCodes();
+
+    } catch (error) {
+      console.error('Error deleting promo code:', error);
+      alert('Failed to delete promo code. Please try again.');
+    }
+  },
+
+  // Toggle promo code active status
+  async togglePromoStatus(promoId) {
+    const promo = this.promoCodes.find(p => p.id === promoId);
+    if (!promo) return;
+
+    try {
+      const response = await fetch(`${this.API_BASE}/manage-promo-codes`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`,
+        },
+        body: JSON.stringify({
+          id: promoId,
+          isActive: !promo.is_active,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update promo code');
+      }
+
+      await this.loadPromoCodes();
+
+    } catch (error) {
+      console.error('Error toggling promo status:', error);
+      alert('Failed to update promo code. Please try again.');
+    }
   },
 };
 

@@ -192,6 +192,33 @@ const BookingAPI = {
       day: 'numeric',
     });
   },
+
+  /**
+   * Validate a promo code
+   * @param {string} code - Promo code to validate
+   * @param {number} orderAmount - Order amount for percentage calculation
+   * @returns {Promise<Object>} Validation result
+   */
+  async validatePromoCode(code, orderAmount) {
+    try {
+      const response = await fetch(`${this.BASE_URL}/validate-promo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code, orderAmount }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to validate promo code');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error validating promo code:', error);
+      return { valid: false, error: 'Failed to validate promo code' };
+    }
+  },
 };
 
 // Export for use in other modules

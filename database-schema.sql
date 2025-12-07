@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   -- Pricing
   base_price DECIMAL(10,2) NOT NULL,
   delivery_fee DECIMAL(10,2) DEFAULT 0,
+  discount_amount DECIMAL(10,2) DEFAULT 0,
+  promo_code VARCHAR(50),
   deposit_amount DECIMAL(10,2) NOT NULL,
   total_amount DECIMAL(10,2) NOT NULL,
 
@@ -67,7 +69,14 @@ CREATE TABLE IF NOT EXISTS bookings (
   -- Metadata
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  notes TEXT -- Admin notes
+  notes TEXT, -- Admin notes
+
+  -- Reminder tracking
+  reminder_3day_sent TIMESTAMP WITH TIME ZONE,
+  reminder_1day_sent TIMESTAMP WITH TIME ZONE,
+
+  -- Google Calendar integration
+  google_calendar_event_id VARCHAR(255)
 );
 
 -- Blocked Dates Table (replaces hardcoded arrays)

@@ -5,6 +5,8 @@
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "stripe": "^14.10.0"
+    "googleapis": "^129.0.0",
+    "stripe": "^14.10.0",
+    "twilio": "^4.20.0"
   }
 }

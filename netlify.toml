@@ -6,6 +6,11 @@
 [functions]
   node_bundler = "esbuild"
 
+# Scheduled function for sending reminders
+# Runs daily at 9:00 AM UTC (3:00 AM Mountain Time)
+[functions.send-reminders]
+  schedule = "0 9 * * *"
+
 [[redirects]]
   from = "http://mybounceplace.com/*"
   to = "https://mybounceplace.com/:splat"

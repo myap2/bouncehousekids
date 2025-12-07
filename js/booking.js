@@ -177,6 +177,14 @@ class BookingSystem {
                         <label for="booking-notes">Special Requests</label>
                         <textarea id="booking-notes" name="notes" rows="3" placeholder="Any special requirements or requests"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="booking-promo">Promo Code</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="booking-promo" name="promoCode" placeholder="Enter code" style="flex: 1; text-transform: uppercase;">
+                            <button type="button" id="apply-promo-btn" class="submit-btn" style="padding: 10px 15px; font-size: 0.9rem;">Apply</button>
+                        </div>
+                        <div id="promo-message" style="margin-top: 5px; font-size: 0.9rem;"></div>
+                    </div>
                     <input type="hidden" name="rentalType" value="${rentalType}">
                     <input type="hidden" name="eventDate" id="booking-event-date" value="">
 
@@ -210,7 +218,54 @@ class BookingSystem {
             }
         });
 
+        // Setup promo code handler
+        const promoBtn = modal.querySelector('#apply-promo-btn');
+        promoBtn.addEventListener('click', () => this.applyPromoCode(rentalType));
+
         this.setupBookingForm(rentalType);
+    }
+
+    async applyPromoCode(rentalType) {
+        const promoInput = document.getElementById('booking-promo');
+        const promoMessage = document.getElementById('promo-message');
+        const promoBtn = document.getElementById('apply-promo-btn');
+        const zipInput = document.getElementById('booking-zip');
+
+        const code = promoInput.value.trim();
+        if (!code) {
+            promoMessage.innerHTML = '<span style="color: #dc3545;">Please enter a promo code</span>';
+            return;
+        }
+
+        // Calculate current order amount
+        const pricing = BookingAPI.calculatePricing(rentalType, zipInput?.value);
+
+        promoBtn.disabled = true;
+        promoBtn.textContent = '...';
+
+        try {
+            const result = await BookingAPI.validatePromoCode(code, pricing.totalAmount);
+
+            if (result.valid) {
+                this.appliedPromo = result;
+                promoMessage.innerHTML = `<span style="color: #28a745;">&#10004; ${result.description || 'Code applied!'} (-${BookingAPI.formatCurrency(result.discountAmount)})</span>`;
+                promoInput.disabled = true;
+                promoBtn.textContent = 'Applied';
+                promoBtn.style.background = '#28a745';
+
+                // Update pricing display with discount
+                this.updatePricingDisplay(rentalType, zipInput?.value);
+            } else {
+                this.appliedPromo = null;
+                promoMessage.innerHTML = `<span style="color: #dc3545;">&#10008; ${result.error || 'Invalid code'}</span>`;
+                promoBtn.disabled = false;
+                promoBtn.textContent = 'Apply';
+            }
+        } catch (error) {
+            promoMessage.innerHTML = '<span style="color: #dc3545;">Error validating code</span>';
+            promoBtn.disabled = false;
+            promoBtn.textContent = 'Apply';
+        }
     }
 
     handleDateSelection(date, dayData, rentalType) {
@@ -238,7 +293,33 @@ class BookingSystem {
     updatePricingDisplay(rentalType, zip) {
         const pricingDetails = document.getElementById('pricing-details');
         const pricing = BookingAPI.calculatePricing(rentalType, zip);
-        this.currentPricing = pricing;
+
+        // Apply promo discount if available
+        let discountAmount = 0;
+        let discountHtml = '';
+
+        if (this.appliedPromo && this.appliedPromo.valid) {
+            discountAmount = this.appliedPromo.discountAmount || 0;
+            discountHtml = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #28a745;">
+                    <span>Promo Discount (${this.appliedPromo.code}):</span>
+                    <span>-${BookingAPI.formatCurrency(discountAmount)}</span>
+                </div>
+            `;
+        }
+
+        const finalTotal = pricing.totalAmount - discountAmount;
+        const depositAmount = Math.round(finalTotal * 0.5 * 100) / 100;
+        const balanceDue = finalTotal - depositAmount;
+
+        // Store current pricing with discount applied
+        this.currentPricing = {
+            ...pricing,
+            discountAmount,
+            finalTotal,
+            depositAmount,
+            balanceDue
+        };
 
         pricingDetails.innerHTML = `
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -249,25 +330,26 @@ class BookingSystem {
                 <span>Delivery Fee (${pricing.deliveryZone}):</span>
                 <span>${BookingAPI.formatCurrency(pricing.deliveryFee)}</span>
             </div>
+            ${discountHtml}
             <hr style="margin: 10px 0;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold;">
                 <span>Total:</span>
-                <span>${BookingAPI.formatCurrency(pricing.totalAmount)}</span>
+                <span>${BookingAPI.formatCurrency(finalTotal)}</span>
             </div>
             <div style="display: flex; justify-content: space-between; color: #28a745; font-weight: bold;">
                 <span>Deposit Due Now (50%):</span>
-                <span>${BookingAPI.formatCurrency(pricing.depositAmount)}</span>
+                <span>${BookingAPI.formatCurrency(depositAmount)}</span>
             </div>
             <div style="display: flex; justify-content: space-between; color: #666; font-size: 0.9rem;">
                 <span>Balance Due at Event:</span>
-                <span>${BookingAPI.formatCurrency(pricing.balanceDue)}</span>
+                <span>${BookingAPI.formatCurrency(balanceDue)}</span>
             </div>
         `;
 
         // Update button text
         const btnText = document.getElementById('btn-text');
         if (btnText) {
-            btnText.textContent = `Pay ${BookingAPI.formatCurrency(pricing.depositAmount)} Deposit`;
+            btnText.textContent = `Pay ${BookingAPI.formatCurrency(depositAmount)} Deposit`;
         }
     }
 
@@ -313,6 +395,7 @@ class BookingSystem {
                 eventZip: formData.get('zip'),
                 guestsCount: formData.get('guests'),
                 specialRequests: formData.get('notes'),
+                promoCode: this.appliedPromo?.code || formData.get('promoCode') || null,
             };
 
             // Check availability one more time

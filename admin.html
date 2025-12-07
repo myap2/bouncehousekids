@@ -478,6 +478,46 @@
             margin-bottom: 10px;
         }
 
+        /* Promo Codes Table */
+        .promo-codes-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .promo-codes-table th,
+        .promo-codes-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .promo-codes-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .promo-codes-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .promo-codes-table .promo-code {
+            font-family: monospace;
+            font-weight: 600;
+            background: #e3f2fd;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .promo-codes-table .promo-active {
+            color: #28a745;
+        }
+
+        .promo-codes-table .promo-inactive {
+            color: #dc3545;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .admin-header {
@@ -541,6 +581,7 @@
                 <button data-section="bookings">Bookings</button>
                 <button data-section="calendar">Calendar</button>
                 <button data-section="blocked-dates">Blocked Dates</button>
+                <button data-section="promo-codes">Promo Codes</button>
             </div>
 
             <!-- Overview Section -->
@@ -633,6 +674,18 @@
                     <div class="loading">Loading...</div>
                 </div>
             </div>
+
+            <!-- Promo Codes Section -->
+            <div id="section-promo-codes" class="admin-section">
+                <div class="section-header">
+                    <h2>Manage Promo Codes</h2>
+                    <button class="action-btn view" onclick="AdminDashboard.showAddPromoModal()">+ Add Promo Code</button>
+                </div>
+
+                <div id="promo-codes-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
         </div>
 
         <!-- Booking Detail Modal -->
@@ -645,6 +698,62 @@
                 <div id="booking-detail-content">
                     <!-- Booking details will be rendered here -->
                 </div>
+            </div>
+        </div>
+
+        <!-- Promo Code Modal -->
+        <div id="promo-modal" class="admin-modal">
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h3 id="promo-modal-title">Add Promo Code</h3>
+                    <button class="close-modal" onclick="AdminDashboard.closePromoModal()">&times;</button>
+                </div>
+                <form id="promo-form">
+                    <input type="hidden" id="promo-id">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="promo-code" style="display: block; margin-bottom: 5px; font-weight: 600;">Code *</label>
+                        <input type="text" id="promo-code" required placeholder="e.g., SUMMER25" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-transform: uppercase;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="promo-description" style="display: block; margin-bottom: 5px; font-weight: 600;">Description</label>
+                        <input type="text" id="promo-description" placeholder="e.g., Summer special discount" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label for="promo-discount-type" style="display: block; margin-bottom: 5px; font-weight: 600;">Discount Type *</label>
+                            <select id="promo-discount-type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount ($)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="promo-discount-value" style="display: block; margin-bottom: 5px; font-weight: 600;">Discount Value *</label>
+                            <input type="number" id="promo-discount-value" required min="0" step="0.01" placeholder="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label for="promo-min-order" style="display: block; margin-bottom: 5px; font-weight: 600;">Min Order Amount</label>
+                            <input type="number" id="promo-min-order" min="0" step="0.01" placeholder="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="promo-max-uses" style="display: block; margin-bottom: 5px; font-weight: 600;">Max Uses</label>
+                            <input type="number" id="promo-max-uses" min="1" placeholder="Unlimited" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label for="promo-valid-from" style="display: block; margin-bottom: 5px; font-weight: 600;">Valid From</label>
+                            <input type="date" id="promo-valid-from" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="promo-valid-until" style="display: block; margin-bottom: 5px; font-weight: 600;">Valid Until</label>
+                            <input type="date" id="promo-valid-until" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
+                    <div id="promo-error" style="display: none; background: #f8d7da; color: #721c24; padding: 10px; border-radius: 6px; margin-bottom: 15px;"></div>
+                    <button type="submit" class="login-btn" id="promo-submit-btn">Save Promo Code</button>
+                </form>
             </div>
         </div>
     </div>

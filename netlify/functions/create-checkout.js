@@ -144,6 +144,8 @@ exports.handler = async (event) => {
           special_requests: specialRequests,
           base_price: basePrice,
           delivery_fee: deliveryFee,
+          discount_amount: discountAmount,
+          promo_code: appliedPromoCode,
           deposit_amount: depositAmount,
           total_amount: totalAmount,
           payment_status: 'pending',
@@ -215,6 +217,9 @@ exports.handler = async (event) => {
         pricing: {
           basePrice,
           deliveryFee,
+          discountAmount,
+          promoCode: appliedPromoCode,
+          subtotal,
           totalAmount,
           depositAmount,
         },
