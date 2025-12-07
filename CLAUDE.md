@@ -52,8 +52,16 @@ Then visit `http://localhost:8000`
 ### File Structure
 ```
 /
-├── index.html              # Main SPA shell with all page content
-├── css/styles.css          # All application styles
+├── index.html                          # Main SPA shell with all page content
+├── bounce-house-rentals-logan-ut.html  # SEO landing page
+├── party-rentals-logan-ut.html         # SEO landing page
+├── blog.html                           # Blog/content page
+├── reviews.html                        # Customer reviews page
+├── privacy-policy.html                 # Legal page
+├── terms-of-service.html               # Legal page
+├── waiver-print.html                   # Printable waiver version
+├── test-mailto.html                    # Development test file
+├── css/styles.css                      # All application styles
 ├── js/
 │   ├── data.js            # Bounce house inventory and business data
 │   ├── app.js             # Main application initialization
@@ -67,7 +75,12 @@ Then visit `http://localhost:8000`
 │   └── sms-notifications.js # SMS integration
 ├── sw.js                  # Service worker for PWA
 ├── images/                # Bounce house product images
-└── *.html                 # Additional static pages (blog, reviews, etc.)
+├── robots.txt             # Search engine crawler instructions
+├── sitemap.xml            # SEO sitemap for search engines
+├── site.webmanifest       # PWA manifest file
+├── CNAME                  # Custom domain (mybounceplace.com)
+├── netlify.toml           # Netlify deployment configuration
+└── _redirects             # Netlify redirect rules
 ```
 
 ### JavaScript Architecture
@@ -369,6 +382,40 @@ This is a static site - deployment is simple:
 - Monitor form submissions in Formspree dashboard
 - Check analytics tracking is working
 - Test email deliverability
+
+### Netlify Configuration
+
+The project includes Netlify-specific configuration files:
+
+**netlify.toml**:
+- HTTP to HTTPS redirects (forces secure connections)
+- www to non-www redirects (canonical URL structure)
+- Security headers:
+  - X-Frame-Options: DENY (prevents clickjacking)
+  - X-XSS-Protection: 1; mode=block
+  - X-Content-Type-Options: nosniff
+  - Referrer-Policy: strict-origin-when-cross-origin
+  - Strict-Transport-Security with preload
+
+**_redirects**:
+- Backup redirect rules in Netlify's simplified format
+- Ensures consistent URL structure across all entry points
+- All traffic redirected to https://mybounceplace.com (non-www, HTTPS)
+
+**CNAME**:
+- Custom domain configuration for GitHub Pages fallback
+- Contains: mybounceplace.com
+
+## Version Control
+
+The repository uses Git with standard ignores for:
+- Node modules (if development tools are added)
+- Environment variables (.env files)
+- Editor configurations (.vscode, .idea)
+- OS-specific files (.DS_Store, Thumbs.db)
+- Temporary and backup files
+
+Note: No sensitive information (API keys, credentials) should be committed to the repository.
 
 ## Known Limitations
 
