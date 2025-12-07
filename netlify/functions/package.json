@@ -1,0 +1,10 @@
+{
+  "name": "mybounceplace-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for My Bounce Place booking system",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "stripe": "^14.10.0"
+  }
+}

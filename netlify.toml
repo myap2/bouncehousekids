@@ -1,3 +1,11 @@
+# Build settings
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+[functions]
+  node_bundler = "esbuild"
+
 [[redirects]]
   from = "http://mybounceplace.com/*"
   to = "https://mybounceplace.com/:splat"

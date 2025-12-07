@@ -1,7 +1,10 @@
-// Enhanced Booking System for My Bounce Place
+// Enhanced Booking System for My Bounce Place with Stripe Integration
 class BookingSystem {
     constructor() {
         this.availability = {};
+        this.selectedDate = null;
+        this.calendar = null;
+        this.currentPricing = null;
         this.initializeBookingSystem();
     }
 
@@ -9,6 +12,7 @@ class BookingSystem {
         this.setupBookingButtons();
         this.setupAvailabilityChecker();
         this.setupBookingConfirmation();
+        this.handleBookingRedirects();
     }
 
     setupBookingButtons() {
@@ -25,22 +29,111 @@ class BookingSystem {
         });
     }
 
+    // Handle Stripe redirect callbacks
+    handleBookingRedirects() {
+        const hash = window.location.hash;
+
+        if (hash.includes('booking-success')) {
+            // Show success page
+            this.showSuccessPage();
+        } else if (hash.includes('booking-cancelled')) {
+            // Show cancelled page
+            this.showCancelledPage();
+        }
+    }
+
+    showSuccessPage() {
+        // Create success modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'booking-success-modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; text-align: center;">
+                <h2 style="color: #28a745;">Payment Successful!</h2>
+                <div style="font-size: 4rem; margin: 20px 0;">🎉</div>
+                <p>Thank you for booking with My Bounce Place!</p>
+                <p>Your deposit has been received and your booking is confirmed.</p>
+
+                <div style="background: #d4edda; padding: 1rem; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>What happens next?</strong></p>
+                    <ul style="text-align: left; margin: 10px 0;">
+                        <li>You'll receive a confirmation email shortly</li>
+                        <li>We'll contact you 1-2 days before your event</li>
+                        <li>Please ensure you've signed the waiver</li>
+                    </ul>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <a href="#waiver" class="hero-button" style="background: #28a745;">Sign Waiver</a>
+                    <a href="#home" class="hero-button" onclick="this.closest('.modal').remove()">Return Home</a>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Clean up URL
+        history.replaceState(null, '', window.location.pathname + '#home');
+    }
+
+    showCancelledPage() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'booking-cancelled-modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; text-align: center;">
+                <h2 style="color: #dc3545;">Booking Cancelled</h2>
+                <div style="font-size: 4rem; margin: 20px 0;">😕</div>
+                <p>Your booking was not completed.</p>
+                <p>No charges have been made to your card.</p>
+
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 20px 0;">
+                    <p>Need help? Contact us:</p>
+                    <p><a href="tel:3852888065">(385) 288-8065</a></p>
+                    <p><a href="mailto:noreply@mybounceplace.com">noreply@mybounceplace.com</a></p>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <a href="#pricing" class="hero-button" style="background: #4a90d9;" onclick="this.closest('.modal').remove()">Try Again</a>
+                    <a href="#home" class="hero-button" onclick="this.closest('.modal').remove()">Return Home</a>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Clean up URL
+        history.replaceState(null, '', window.location.pathname + '#home');
+    }
+
     showBookingModal(pricingCard) {
         const pricingType = pricingCard.querySelector('h3').textContent;
-        const price = pricingCard.querySelector('div[style*="font-size: 2.5rem"]').textContent;
-        
-        // Create booking modal
+        const priceText = pricingCard.querySelector('div[style*="font-size: 2.5rem"]').textContent;
+
+        // Map display name to rental type key
+        const rentalTypeMap = {
+            'Daily Rental': 'daily',
+            'Weekend Special': 'weekend',
+            'Weekly Rental': 'weekly'
+        };
+        const rentalType = rentalTypeMap[pricingType] || 'daily';
+
+        // Create booking modal with calendar
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'booking-modal';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-content" style="max-width: 600px;">
                 <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
                 <h3>Book Your Bounce House</h3>
                 <p><strong>Package:</strong> ${pricingType}</p>
-                <p><strong>Price:</strong> ${price}</p>
-                
-                <form id="booking-form">
+
+                <div id="booking-calendar-container" style="margin: 20px 0;"></div>
+
+                <div id="pricing-breakdown" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4 style="margin-top: 0;">Pricing</h4>
+                    <div id="pricing-details"></div>
+                </div>
+
+                <form id="booking-form" style="display: none;">
                     <div class="form-group">
                         <label for="booking-name">Name *</label>
                         <input type="text" id="booking-name" name="name" required>
@@ -52,10 +145,6 @@ class BookingSystem {
                     <div class="form-group">
                         <label for="booking-phone">Phone *</label>
                         <input type="tel" id="booking-phone" name="phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="booking-date">Event Date *</label>
-                        <input type="date" id="booking-date" name="eventDate" required min="${new Date().toISOString().split('T')[0]}">
                     </div>
                     <div class="form-group">
                         <label for="booking-time">Event Time *</label>
@@ -72,8 +161,13 @@ class BookingSystem {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="booking-location">Event Location *</label>
-                        <input type="text" id="booking-location" name="location" required placeholder="Address or location">
+                        <label for="booking-location">Event Address *</label>
+                        <input type="text" id="booking-location" name="location" required placeholder="Full street address">
+                    </div>
+                    <div class="form-group">
+                        <label for="booking-zip">Zip Code *</label>
+                        <input type="text" id="booking-zip" name="zip" required placeholder="84321" maxlength="5" pattern="[0-9]{5}">
+                        <small style="color: #666;">Used to calculate delivery fee</small>
                     </div>
                     <div class="form-group">
                         <label for="booking-guests">Number of Guests</label>
@@ -83,346 +177,200 @@ class BookingSystem {
                         <label for="booking-notes">Special Requests</label>
                         <textarea id="booking-notes" name="notes" rows="3" placeholder="Any special requirements or requests"></textarea>
                     </div>
-                    <input type="hidden" name="package" value="${pricingType}">
-                    <input type="hidden" name="price" value="${price}">
-                    <button type="submit" class="submit-btn">Request Booking</button>
+                    <input type="hidden" name="rentalType" value="${rentalType}">
+                    <input type="hidden" name="eventDate" id="booking-event-date" value="">
+
+                    <div id="booking-error" style="display: none; background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px;"></div>
+
+                    <button type="submit" class="submit-btn" id="pay-deposit-btn">
+                        <span id="btn-text">Pay Deposit</span>
+                        <span id="btn-loading" style="display: none;">Processing...</span>
+                    </button>
+
+                    <p style="font-size: 0.9rem; color: #666; margin-top: 10px; text-align: center;">
+                        You'll be redirected to our secure payment page to pay a 50% deposit.
+                    </p>
                 </form>
             </div>
         `;
 
         document.body.appendChild(modal);
-        this.setupBookingForm();
+
+        // Initialize calendar
+        this.calendar = new AvailabilityCalendar('booking-calendar-container', {
+            onDateSelect: (date, dayData) => this.handleDateSelection(date, dayData, rentalType)
+        });
+
+        // Setup zip code change handler for pricing updates
+        const zipInput = modal.querySelector('#booking-zip');
+        zipInput.addEventListener('change', () => this.updatePricingDisplay(rentalType, zipInput.value));
+        zipInput.addEventListener('input', () => {
+            if (zipInput.value.length === 5) {
+                this.updatePricingDisplay(rentalType, zipInput.value);
+            }
+        });
+
+        this.setupBookingForm(rentalType);
     }
 
-    setupBookingForm() {
+    handleDateSelection(date, dayData, rentalType) {
         const form = document.getElementById('booking-form');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.processBooking(form);
-            });
-            
-            // Add availability checker for booking form date input
-            const dateInput = form.querySelector('#booking-date');
-            if (dateInput) {
-                dateInput.addEventListener('change', (e) => {
-                    this.checkBookingAvailability(e.target.value);
-                });
-                
-                // Reset styling when user starts typing/selecting
-                dateInput.addEventListener('focus', () => {
-                    dateInput.style.cssText = '';
-                });
-            }
+        const dateInput = document.getElementById('booking-event-date');
+        const pricingBreakdown = document.getElementById('pricing-breakdown');
+
+        if (dayData.available) {
+            this.selectedDate = date;
+            dateInput.value = date;
+            form.style.display = 'block';
+            pricingBreakdown.style.display = 'block';
+
+            // Update pricing with current zip
+            const zipInput = document.getElementById('booking-zip');
+            this.updatePricingDisplay(rentalType, zipInput?.value);
+        } else {
+            this.selectedDate = null;
+            dateInput.value = '';
+            form.style.display = 'none';
+            pricingBreakdown.style.display = 'none';
         }
     }
 
-    async processBooking(form) {
+    updatePricingDisplay(rentalType, zip) {
+        const pricingDetails = document.getElementById('pricing-details');
+        const pricing = BookingAPI.calculatePricing(rentalType, zip);
+        this.currentPricing = pricing;
+
+        pricingDetails.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Base Price (${rentalType}):</span>
+                <span>${BookingAPI.formatCurrency(pricing.basePrice)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Delivery Fee (${pricing.deliveryZone}):</span>
+                <span>${BookingAPI.formatCurrency(pricing.deliveryFee)}</span>
+            </div>
+            <hr style="margin: 10px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold;">
+                <span>Total:</span>
+                <span>${BookingAPI.formatCurrency(pricing.totalAmount)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #28a745; font-weight: bold;">
+                <span>Deposit Due Now (50%):</span>
+                <span>${BookingAPI.formatCurrency(pricing.depositAmount)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #666; font-size: 0.9rem;">
+                <span>Balance Due at Event:</span>
+                <span>${BookingAPI.formatCurrency(pricing.balanceDue)}</span>
+            </div>
+        `;
+
+        // Update button text
+        const btnText = document.getElementById('btn-text');
+        if (btnText) {
+            btnText.textContent = `Pay ${BookingAPI.formatCurrency(pricing.depositAmount)} Deposit`;
+        }
+    }
+
+    setupBookingForm(rentalType) {
+        const form = document.getElementById('booking-form');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.processBooking(form, rentalType);
+            });
+        }
+    }
+
+    async processBooking(form, rentalType) {
+        const submitBtn = document.getElementById('pay-deposit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnLoading = document.getElementById('btn-loading');
+        const errorDiv = document.getElementById('booking-error');
+
         try {
-            // Check if selected date is blocked
-            const eventDate = form.querySelector('#booking-date').value;
-            const blockedDates = [
-                '2025-12-25', // Christmas
-                '2025-12-31', // New Year's Eve
-                '2026-01-01', // New Year's Day
-                '2026-01-15', // Martin Luther King Jr. Day
-                '2026-02-16', // Presidents' Day
-                '2026-05-25', // Memorial Day
-                '2026-07-04', // Independence Day
-                '2026-09-07', // Labor Day
-                '2026-10-12', // Columbus Day
-                '2026-11-11', // Veterans Day
-                '2026-11-26', // Thanksgiving Day
-                '2026-12-25', // Christmas 2026
-                '2026-12-31', // New Year's Eve 2026
-                '2027-01-01', // New Year's Day 2027
-                // Add more blocked dates here as needed
-            ];
-            
-            if (blockedDates.includes(eventDate)) {
-                this.showBookingAvailabilityMessage('❌ Cannot book on this date. Please select another date.', 'error');
-                return;
+            // Validate date is selected
+            if (!this.selectedDate) {
+                throw new Error('Please select a date from the calendar');
             }
 
-            // Disable submit button
-            const submitBtn = form.querySelector('.submit-btn');
-            submitBtn.textContent = 'Sending...';
+            // Show loading state
             submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+            errorDiv.style.display = 'none';
 
             // Collect form data
             const formData = new FormData(form);
             const bookingData = {
-                name: formData.get('name'),
-                email: formData.get('email'),
-                phone: formData.get('phone'),
-                eventDate: formData.get('eventDate'),
+                bounceHouseId: null, // Will use default if only one
+                eventDate: this.selectedDate,
                 eventTime: formData.get('eventTime'),
-                location: formData.get('location'),
-                guests: formData.get('guests'),
-                package: formData.get('package'),
-                price: formData.get('price'),
-                notes: formData.get('notes'),
-                timestamp: new Date().toISOString()
+                rentalType: rentalType,
+                customerName: formData.get('name'),
+                customerEmail: formData.get('email'),
+                customerPhone: formData.get('phone'),
+                eventAddress: formData.get('location'),
+                eventZip: formData.get('zip'),
+                guestsCount: formData.get('guests'),
+                specialRequests: formData.get('notes'),
             };
 
-            // Save to localStorage first (always do this)
-            const existingBookings = JSON.parse(localStorage.getItem('bookingRequests') || '[]');
-            const bookingId = 'booking_' + Date.now();
-            existingBookings.push({
-                id: bookingId,
-                ...bookingData,
-                status: 'sent'
-            });
-            localStorage.setItem('bookingRequests', JSON.stringify(existingBookings));
+            // Check availability one more time
+            const availability = await BookingAPI.checkAvailability(this.selectedDate);
+            if (!availability.available) {
+                throw new Error(availability.reason || 'This date is no longer available');
+            }
 
-            // Show success message with email options
-            this.showBookingEmailOptions(bookingData);
-            
-            // Track in analytics
-            this.trackBookingAnalytics(bookingData);
-            
+            // Create Stripe checkout session
+            const result = await BookingAPI.createCheckout(bookingData);
+
+            if (result.checkoutUrl) {
+                // Save booking data to localStorage as backup
+                const existingBookings = JSON.parse(localStorage.getItem('bookingRequests') || '[]');
+                existingBookings.push({
+                    id: result.bookingId || 'pending_' + Date.now(),
+                    sessionId: result.sessionId,
+                    ...bookingData,
+                    pricing: result.pricing,
+                    timestamp: new Date().toISOString(),
+                    status: 'pending_payment'
+                });
+                localStorage.setItem('bookingRequests', JSON.stringify(existingBookings));
+
+                // Track in analytics
+                this.trackBookingAnalytics(bookingData);
+
+                // Redirect to Stripe Checkout
+                window.location.href = result.checkoutUrl;
+            } else {
+                throw new Error('Failed to create checkout session');
+            }
+
         } catch (error) {
             console.error('Booking error:', error);
-            this.showBookingError(error);
-        } finally {
+            errorDiv.textContent = error.message || 'An error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+
             // Reset button
-            const submitBtn = form.querySelector('.submit-btn');
-            submitBtn.textContent = 'Request Booking';
             submitBtn.disabled = false;
+            btnText.style.display = 'inline';
+            btnLoading.style.display = 'none';
         }
-    }
-
-    async sendBookingEmail(bookingData) {
-        // Use Formspree for booking submissions (same as contact form)
-        return this.sendViaFormspree(bookingData);
-    }
-
-    async sendViaEmailJS(bookingData) {
-        const templateParams = {
-            to_email: 'noreply@mybounceplace.com', // Your email
-            from_name: bookingData.name,
-            from_email: bookingData.email,
-            from_phone: bookingData.phone,
-            event_date: bookingData.eventDate,
-            event_time: bookingData.eventTime,
-            event_location: bookingData.location,
-            number_guests: bookingData.guests,
-            special_requests: bookingData.notes,
-            package: bookingData.package,
-            price: bookingData.price,
-            message: this.formatBookingEmail(bookingData)
-        };
-
-        return emailjs.send(
-            'YOUR_EMAILJS_SERVICE_ID', // Replace with your EmailJS service ID
-            'YOUR_EMAILJS_TEMPLATE_ID', // Replace with your EmailJS template ID
-            templateParams
-        );
-    }
-
-    async sendViaFormspree(bookingData) {
-        try {
-            const formData = new FormData();
-            
-            // Add all booking data to form
-            Object.keys(bookingData).forEach(key => {
-                formData.append(key, bookingData[key]);
-            });
-
-            // Add form type identifier for Formspree
-            formData.append('form_type', 'booking_request');
-            formData.append('_subject', `New Bounce House Booking - ${bookingData.name}`);
-            formData.append('_replyto', bookingData.email);
-
-            const response = await fetch('https://formspree.io/f/mgvzkqgp', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-
-            
-            if (response.ok) {
-                return true;
-            } else {
-                console.error('❌ Formspree booking failed:', response.status, response.statusText);
-                return false;
-            }
-        } catch (error) {
-            console.error('❌ Formspree booking error:', error);
-            return false;
-        }
-    }
-
-    // Fallback email method for bookings
-    sendBookingFallbackEmail(bookingData) {
-        const subject = encodeURIComponent(`New Bounce House Booking - ${bookingData.name}`);
-        const body = encodeURIComponent(this.formatBookingEmail(bookingData));
-        
-        const mailtoLink = `mailto:noreply@mybounceplace.com?subject=${subject}&body=${body}`;
-        
-        // Show user fallback options
-        this.showBookingFallbackOptions(bookingData, mailtoLink);
-    }
-
-    showBookingFallbackOptions(bookingData, mailtoLink) {
-        const modal = document.getElementById('booking-modal');
-        const smsLink = `sms:3852888065?body=${encodeURIComponent(`Hi! I want to book a bounce house. Name: ${bookingData.name}, Date: ${bookingData.eventDate}, Package: ${bookingData.package}, Email: ${bookingData.email}`)}`;
-        
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px; text-align: center;">
-                <h3>⚠️ Email System Temporarily Unavailable</h3>
-                <p>Your booking request has been saved locally. To ensure we receive your request, please use one of these options:</p>
-                
-                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
-                    <a href="${mailtoLink}" class="hero-button" style="background: #007bff;">📧 Send Email</a>
-                    <a href="${smsLink}" class="hero-button" style="background: #28a745;">📱 Send SMS</a>
-                    <a href="tel:3852888065" class="hero-button" style="background: #17a2b8;">📞 Call Now</a>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
-                    <p><strong>Your Booking Details:</strong></p>
-                    <p>Name: ${bookingData.name}</p>
-                    <p>Date: ${bookingData.eventDate}</p>
-                    <p>Time: ${bookingData.eventTime}</p>
-                    <p>Package: ${bookingData.package}</p>
-                    <p>Price: ${bookingData.price}</p>
-                </div>
-                
-                <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
-            </div>
-        `;
-    }
-
-    showBookingEmailOptions(bookingData) {
-        const modal = document.getElementById('booking-modal');
-        const mailtoLink = this.createBookingMailtoLink(bookingData);
-        const smsLink = this.createBookingSMSLink(bookingData);
-        
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px; text-align: center;">
-                <h3>🎉 Booking Request Submitted!</h3>
-                <p>Thank you for choosing My Bounce Place!</p>
-                <p>To ensure we receive your booking request, please send us an email:</p>
-                
-                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
-                    <a href="${mailtoLink}" class="hero-button" style="background: #007bff;">📧 Send Email</a>
-                    <a href="${smsLink}" class="hero-button" style="background: #28a745;">📱 Send SMS</a>
-                    <a href="tel:3852888065" class="hero-button" style="background: #17a2b8;">📞 Call Now</a>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
-                    <p><strong>Your Booking Details:</strong></p>
-                    <p>Name: ${bookingData.name}</p>
-                    <p>Date: ${bookingData.eventDate}</p>
-                    <p>Time: ${bookingData.eventTime}</p>
-                    <p>Package: ${bookingData.package}</p>
-                    <p>Price: ${bookingData.price}</p>
-                </div>
-                
-                <p>We'll contact you within 24 hours to confirm your booking and discuss setup details.</p>
-                <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
-            </div>
-        `;
-    }
-
-    createBookingMailtoLink(bookingData) {
-        const subject = encodeURIComponent(`New Bounce House Booking - ${bookingData.name}`);
-        const body = encodeURIComponent(this.formatBookingEmail(bookingData));
-        
-        return `mailto:noreply@mybounceplace.com?subject=${subject}&body=${body}`;
-    }
-
-    createBookingSMSLink(bookingData) {
-        const message = encodeURIComponent(`Hi! I want to book a bounce house. Name: ${bookingData.name}, Date: ${bookingData.eventDate}, Package: ${bookingData.package}, Email: ${bookingData.email}`);
-        return `sms:3852888065?body=${message}`;
-    }
-
-    formatBookingEmail(bookingData) {
-        return `
-New Bounce House Booking Request
-
-Customer Details:
-- Name: ${bookingData.name}
-- Email: ${bookingData.email}
-- Phone: ${bookingData.phone}
-
-Event Details:
-- Date: ${bookingData.eventDate}
-- Time: ${bookingData.eventTime}
-- Location: ${bookingData.location}
-- Number of Guests: ${bookingData.guests || 'Not specified'}
-
-Package Details:
-- Package: ${bookingData.package}
-- Price: ${bookingData.price}
-
-Special Requests:
-${bookingData.notes || 'None'}
-
----
-This booking request was submitted from the My Bounce Place website.
-Please respond within 24 hours to confirm availability.
-        `;
     }
 
     trackBookingAnalytics(bookingData) {
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'booking_request', {
-                event_category: 'engagement',
-                event_label: bookingData.package,
-                value: 1,
-                custom_parameters: {
-                    package: bookingData.package,
-                    price: bookingData.price,
-                    event_date: bookingData.eventDate
-                }
+            gtag('event', 'begin_checkout', {
+                event_category: 'ecommerce',
+                event_label: bookingData.rentalType,
+                value: this.currentPricing?.depositAmount || 0,
+                items: [{
+                    item_name: 'Bounce House Rental',
+                    item_category: bookingData.rentalType,
+                    price: this.currentPricing?.totalAmount || 0,
+                }]
             });
         }
-    }
-
-    showBookingConfirmation(bookingData) {
-        const modal = document.getElementById('booking-modal');
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px; text-align: center;">
-                <h3>🎉 Booking Request Submitted!</h3>
-                <p>Thank you for choosing My Bounce Place!</p>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                    <p><strong>Confirmation Details:</strong></p>
-                    <p>Name: ${bookingData.name}</p>
-                    <p>Date: ${bookingData.eventDate}</p>
-                    <p>Time: ${bookingData.eventTime}</p>
-                    <p>Package: ${bookingData.package}</p>
-                </div>
-                <p>We'll contact you within 24 hours to confirm your booking and discuss setup details.</p>
-                <p><strong>Next Steps:</strong></p>
-                <ul style="text-align: left; display: inline-block;">
-                    <li>Check your email for a confirmation</li>
-                    <li>We'll call you to confirm availability</li>
-                    <li>Discuss delivery and setup details</li>
-                </ul>
-                <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
-            </div>
-        `;
-    }
-
-    showBookingError(error) {
-        const modal = document.getElementById('booking-modal');
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px; text-align: center;">
-                <h3>❌ Booking Error</h3>
-                <p>Sorry, there was an issue processing your booking request.</p>
-                <p>Please try again or call us directly at <a href="tel:+13852888065">(385) 288-8065</a></p>
-                <p><strong>Alternative Contact Methods:</strong></p>
-                <ul style="text-align: left; display: inline-block;">
-                    <li>Call: (385) 288-8065</li>
-                    <li>Email: noreply@mybounceplace.com</li>
-                    <li>Text us for quick response</li>
-                </ul>
-                <button onclick="this.parentElement.parentElement.remove()" class="hero-button">Close</button>
-            </div>
-        `;
     }
 
     setupAvailabilityChecker() {
@@ -431,10 +379,10 @@ Please respond within 24 hours to confirm availability.
         if (contactForm) {
             const dateInput = contactForm.querySelector('#contact-date');
             if (dateInput) {
-                dateInput.addEventListener('change', (e) => {
-                    this.checkAvailability(e.target.value);
+                dateInput.addEventListener('change', async (e) => {
+                    await this.checkAvailability(e.target.value);
                 });
-                
+
                 // Reset styling when user starts typing/selecting
                 dateInput.addEventListener('focus', () => {
                     dateInput.style.cssText = '';
@@ -444,31 +392,13 @@ Please respond within 24 hours to confirm availability.
     }
 
     async checkAvailability(date) {
-        // List of blocked/unavailable dates
-        const blockedDates = [
-            '2025-12-25', // Christmas
-            '2025-12-31', // New Year's Eve
-            '2026-01-01', // New Year's Day
-            '2026-01-15', // Martin Luther King Jr. Day
-            '2026-02-16', // Presidents' Day
-            '2026-05-25', // Memorial Day
-            '2026-07-04', // Independence Day
-            '2026-09-07', // Labor Day
-            '2026-10-12', // Columbus Day
-            '2026-11-11', // Veterans Day
-            '2026-11-26', // Thanksgiving Day
-            '2026-12-25', // Christmas 2026
-            '2026-12-31', // New Year's Eve 2026
-            '2027-01-01', // New Year's Day 2027
-            // Add more blocked dates here as needed
-        ];
-        
-        const isBlocked = blockedDates.includes(date);
-        
-        // Add visual styling to the date input
         const dateInput = document.getElementById('contact-date');
+
+        // Use API to check availability
+        const result = await BookingAPI.checkAvailability(date);
+
         if (dateInput) {
-            if (isBlocked) {
+            if (!result.available) {
                 dateInput.style.cssText = `
                     background-color: #f8d7da;
                     border-color: #f5c6cb;
@@ -476,7 +406,7 @@ Please respond within 24 hours to confirm availability.
                     text-decoration: line-through;
                     opacity: 0.7;
                 `;
-                this.showAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
+                this.showAvailabilityMessage(`❌ ${result.reason || 'Date not available'}`, 'error');
             } else {
                 dateInput.style.cssText = `
                     background-color: #d4edda;
@@ -486,53 +416,6 @@ Please respond within 24 hours to confirm availability.
                     opacity: 1;
                 `;
                 this.showAvailabilityMessage('✅ Available for booking!', 'success');
-            }
-        }
-    }
-
-    async checkBookingAvailability(date) {
-        // List of blocked/unavailable dates
-        const blockedDates = [
-            '2025-12-25', // Christmas
-            '2025-12-31', // New Year's Eve
-            '2026-01-01', // New Year's Day
-            '2026-01-15', // Martin Luther King Jr. Day
-            '2026-02-16', // Presidents' Day
-            '2026-05-25', // Memorial Day
-            '2026-07-04', // Independence Day
-            '2026-09-07', // Labor Day
-            '2026-10-12', // Columbus Day
-            '2026-11-11', // Veterans Day
-            '2026-11-26', // Thanksgiving Day
-            '2026-12-25', // Christmas 2026
-            '2026-12-31', // New Year's Eve 2026
-            '2027-01-01', // New Year's Day 2027
-            // Add more blocked dates here as needed
-        ];
-        
-        const isBlocked = blockedDates.includes(date);
-        
-        // Add visual styling to the booking date input
-        const dateInput = document.getElementById('booking-date');
-        if (dateInput) {
-            if (isBlocked) {
-                dateInput.style.cssText = `
-                    background-color: #f8d7da;
-                    border-color: #f5c6cb;
-                    color: #721c24;
-                    text-decoration: line-through;
-                    opacity: 0.7;
-                `;
-                this.showBookingAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
-            } else {
-                dateInput.style.cssText = `
-                    background-color: #d4edda;
-                    border-color: #c3e6cb;
-                    color: #155724;
-                    text-decoration: none;
-                    opacity: 1;
-                `;
-                this.showBookingAvailabilityMessage('✅ Available for booking!', 'success');
             }
         }
     }
@@ -555,29 +438,6 @@ Please respond within 24 hours to confirm availability.
         messageDiv.textContent = message;
 
         const dateInput = document.getElementById('contact-date');
-        if (dateInput) {
-            dateInput.parentNode.appendChild(messageDiv);
-        }
-    }
-
-    showBookingAvailabilityMessage(message, type) {
-        let existingMessage = document.getElementById('booking-availability-message');
-        if (existingMessage) {
-            existingMessage.remove();
-        }
-
-        const messageDiv = document.createElement('div');
-        messageDiv.id = 'booking-availability-message';
-        messageDiv.style.cssText = `
-            padding: 0.5rem;
-            margin: 0.5rem 0;
-            border-radius: 4px;
-            font-weight: bold;
-            ${type === 'success' ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'}
-        `;
-        messageDiv.textContent = message;
-
-        const dateInput = document.getElementById('booking-date');
         if (dateInput) {
             dateInput.parentNode.appendChild(messageDiv);
         }

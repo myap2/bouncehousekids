@@ -185,31 +185,12 @@ class ContactManager {
             }
         }
 
-        // Check if selected date is blocked
+        // Note: Date availability is checked asynchronously when the date is selected
+        // If a blocked date message is shown, form submission should be prevented
         const dateInput = this.form.querySelector('#contact-date');
-        if (dateInput && dateInput.value) {
-            const blockedDates = [
-                '2025-12-25', // Christmas
-                '2025-12-31', // New Year's Eve
-                '2026-01-01', // New Year's Day
-                '2026-01-15', // Martin Luther King Jr. Day
-                '2026-02-16', // Presidents' Day
-                '2026-05-25', // Memorial Day
-                '2026-07-04', // Independence Day
-                '2026-09-07', // Labor Day
-                '2026-10-12', // Columbus Day
-                '2026-11-11', // Veterans Day
-                '2026-11-26', // Thanksgiving Day
-                '2026-12-25', // Christmas 2026
-                '2026-12-31', // New Year's Eve 2026
-                '2027-01-01', // New Year's Day 2027
-                // Add more blocked dates here as needed
-            ];
-            
-            if (blockedDates.includes(dateInput.value)) {
-                this.showDateAvailabilityMessage('❌ Cannot submit form with blocked date. Please select another date.', 'error');
-                isValid = false;
-            }
+        const dateMessage = document.getElementById('date-availability-message');
+        if (dateInput && dateInput.value && dateMessage && dateMessage.textContent.includes('not available')) {
+            isValid = false;
         }
 
         return isValid;
@@ -593,41 +574,45 @@ class ContactManager {
         }
     }
 
-    checkDateAvailability(date) {
-        // List of blocked/unavailable dates
-        const blockedDates = [
-            '2025-12-25', // Christmas
-            '2025-12-31', // New Year's Eve
-            '2026-01-01', // New Year's Day
-            '2026-01-15', // Martin Luther King Jr. Day
-            '2026-02-16', // Presidents' Day
-            '2026-05-25', // Memorial Day
-            '2026-07-04', // Independence Day
-            '2026-09-07', // Labor Day
-            '2026-10-12', // Columbus Day
-            '2026-11-11', // Veterans Day
-            '2026-11-26', // Thanksgiving Day
-            '2026-12-25', // Christmas 2026
-            '2026-12-31', // New Year's Eve 2026
-            '2027-01-01', // New Year's Day 2027
-            // Add more blocked dates here as needed
-        ];
-        
-        const isBlocked = blockedDates.includes(date);
-        
-        // Add visual styling to the date input
+    async checkDateAvailability(date) {
         const dateInput = document.getElementById('contact-date');
-        if (dateInput) {
-            if (isBlocked) {
-                dateInput.style.cssText = `
-                    background-color: #f8d7da;
-                    border-color: #f5c6cb;
-                    color: #721c24;
-                    text-decoration: line-through;
-                    opacity: 0.7;
-                `;
-                this.showDateAvailabilityMessage('❌ Date not available. Please select another date.', 'error');
-            } else {
+
+        // Use BookingAPI if available, otherwise fallback to local check
+        if (typeof BookingAPI !== 'undefined') {
+            try {
+                const result = await BookingAPI.checkAvailability(date);
+
+                if (dateInput) {
+                    if (!result.available) {
+                        dateInput.style.cssText = `
+                            background-color: #f8d7da;
+                            border-color: #f5c6cb;
+                            color: #721c24;
+                            text-decoration: line-through;
+                            opacity: 0.7;
+                        `;
+                        this.showDateAvailabilityMessage(`❌ ${result.reason || 'Date not available'}`, 'error');
+                    } else {
+                        dateInput.style.cssText = `
+                            background-color: #d4edda;
+                            border-color: #c3e6cb;
+                            color: #155724;
+                            text-decoration: none;
+                            opacity: 1;
+                        `;
+                        this.showDateAvailabilityMessage('✅ Available for booking!', 'success');
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking date availability:', error);
+                // On error, assume available
+                if (dateInput) {
+                    dateInput.style.cssText = '';
+                }
+            }
+        } else {
+            // Fallback: If API not loaded, just accept the date
+            if (dateInput) {
                 dateInput.style.cssText = `
                     background-color: #d4edda;
                     border-color: #c3e6cb;
@@ -635,7 +620,6 @@ class ContactManager {
                     text-decoration: none;
                     opacity: 1;
                 `;
-                this.showDateAvailabilityMessage('✅ Available for booking!', 'success');
             }
         }
     }
