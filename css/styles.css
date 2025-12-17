@@ -129,9 +129,10 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
-    display: inline-block;
-    min-width: 200px;
+    min-width: 320px;
     text-align: center;
+    display: inline-block;
+    box-sizing: border-box;
 }
 
 .hero-button:hover {
@@ -143,7 +144,6 @@ body {
 .hero-button.secondary {
     background: #00bcd4;
     color: white;
-    margin-top: 1rem;
 }
 
 .hero-button.secondary:hover {
