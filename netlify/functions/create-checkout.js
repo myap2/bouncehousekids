@@ -127,10 +127,13 @@ exports.handler = async (event) => {
     // Create booking record (pending status)
     let bookingId = null;
     if (supabase) {
+      // Only use bounceHouseId if it's a valid UUID format
+      const isValidUUID = bounceHouseId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bounceHouseId);
+
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert({
-          bounce_house_id: bounceHouseId || null,
+          bounce_house_id: isValidUUID ? bounceHouseId : null,
           customer_name: customerName,
           customer_email: customerEmail,
           customer_phone: customerPhone,
