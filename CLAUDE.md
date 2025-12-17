@@ -4,429 +4,167 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **static HTML/JavaScript bounce house rental website** for My Bounce Place, a Logan, Utah-based business. The application was converted from a React/Node.js stack to vanilla JavaScript to eliminate build dependencies and enable simple static hosting.
+**My Bounce Place** - A bounce house rental website for a Logan, Utah business. Static frontend with Netlify Functions backend, Supabase database, and Stripe payment processing.
 
 ## Architecture
 
-### Static Single-Page Application
-- **No build process required** - runs directly in the browser
-- **No npm dependencies** - pure vanilla JavaScript
-- **Hash-based routing** - client-side navigation using URL fragments (#home, #contact, etc.)
-- **LocalStorage persistence** - form submissions and user data stored client-side
-- **Progressive Web App** - includes service worker (sw.js) for offline functionality
+```
+Frontend (Static)          Netlify Functions           External Services
+─────────────────         ──────────────────          ─────────────────
+index.html                 create-checkout.js    ───► Stripe (payments)
+js/*.js          ───►      stripe-webhook.js     ───► Supabase (database)
+css/styles.css             check-availability.js ───► Resend (emails)
+                           get-calendar.js       ───► Twilio (SMS, optional)
+                           admin-login.js        ───► Google Calendar (optional)
+                           validate-promo.js
+```
 
-### Key Technical Stack
-- Vanilla JavaScript (ES6+ classes)
-- HTML5 with semantic markup
-- CSS3 with modern features (Grid, Flexbox)
-- Formspree integration for email submissions (https://formspree.io/f/mgvzkqgp)
-- EmailJS support (optional, needs configuration)
-- Google Analytics 4 tracking
+### Key Components
+
+- **Frontend**: Vanilla JavaScript SPA with hash-based routing (#home, #contact, etc.)
+- **Backend**: Netlify Functions (serverless) in `netlify/functions/`
+- **Database**: Supabase (PostgreSQL) - schema in `database-schema.sql`
+- **Payments**: Stripe Checkout with 50% deposit model
+- **Emails**: Resend for confirmations and reminders
 
 ## Development Commands
 
-### Local Development
-Since this is a static site, you need a simple HTTP server:
-
 ```bash
-# Using Python (recommended)
+# Local development (static files + functions)
+netlify dev
+
+# Static files only
 python -m http.server 8000
 
-# Using Node.js
-npx serve .
+# Test Stripe webhooks locally
+stripe listen --forward-to localhost:8888/.netlify/functions/stripe-webhook
 
-# Using PHP
-php -S localhost:8000
+# Deploy
+git push  # Auto-deploys via Netlify
 ```
 
-Then visit `http://localhost:8000`
+## Environment Variables
 
-### No Build or Install Required
-- **No `npm install`** - no package.json or dependencies
-- **No compilation** - JavaScript files run as-is
-- **No bundling** - individual JS files loaded via script tags
-- **Direct file editing** - changes visible immediately on browser refresh
+Required in Netlify Dashboard (Site Settings > Environment Variables):
 
-## Code Architecture
+```
+SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
+STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+RESEND_API_KEY
+SITE_URL=https://mybounceplace.com
+FROM_EMAIL=bookings@mybounceplace.com
+ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SECRET_KEY
+```
 
-### File Structure
+## File Structure
+
 ```
 /
-├── index.html                          # Main SPA shell with all page content
-├── bounce-house-rentals-logan-ut.html  # SEO landing page
-├── party-rentals-logan-ut.html         # SEO landing page
-├── blog.html                           # Blog/content page
-├── reviews.html                        # Customer reviews page
-├── privacy-policy.html                 # Legal page
-├── terms-of-service.html               # Legal page
-├── waiver-print.html                   # Printable waiver version
-├── test-mailto.html                    # Development test file
-├── css/styles.css                      # All application styles
+├── index.html                 # Main SPA (all pages as divs)
+├── admin.html                 # Admin dashboard
+├── css/styles.css             # All styles
 ├── js/
-│   ├── data.js            # Bounce house inventory and business data
-│   ├── app.js             # Main application initialization
-│   ├── navigation.js      # Hash-based routing system
-│   ├── bouncehouses.js    # Bounce house display and filtering
-│   ├── booking.js         # Booking form and availability checking
-│   ├── contact.js         # Contact form handling
-│   ├── waiver.js          # Digital waiver with signature pad
-│   ├── performance.js     # Performance optimization utilities
-│   ├── reviews.js         # Customer reviews
-│   └── sms-notifications.js # SMS integration
-├── sw.js                  # Service worker for PWA
-├── images/                # Bounce house product images
-├── robots.txt             # Search engine crawler instructions
-├── sitemap.xml            # SEO sitemap for search engines
-├── site.webmanifest       # PWA manifest file
-├── CNAME                  # Custom domain (mybounceplace.com)
-├── netlify.toml           # Netlify deployment configuration
-└── _redirects             # Netlify redirect rules
+│   ├── api.js                 # BookingAPI - talks to Netlify Functions
+│   ├── booking.js             # BookingSystem - modal, form, Stripe redirect
+│   ├── calendar.js            # AvailabilityCalendar component
+│   ├── navigation.js          # Hash routing, page transitions
+│   ├── bouncehouses.js        # Listing and detail views
+│   ├── data.js                # Static data (bounceHouses, companyInfo)
+│   └── admin.js               # Admin dashboard logic
+├── netlify/functions/
+│   ├── _shared/
+│   │   ├── supabase.js        # Database client
+│   │   ├── stripe.js          # Payment client
+│   │   ├── email.js           # Resend helper
+│   │   ├── sms.js             # Twilio helper
+│   │   └── google-calendar.js # Calendar sync
+│   ├── create-checkout.js     # Creates Stripe session + booking record
+│   ├── stripe-webhook.js      # Confirms payment, sends emails
+│   ├── check-availability.js  # Single date check
+│   ├── get-calendar.js        # Month availability data
+│   ├── validate-promo.js      # Promo code validation
+│   ├── admin-login.js         # JWT authentication
+│   ├── get-bookings.js        # Admin: list bookings
+│   ├── update-booking.js      # Admin: update status
+│   └── manage-blocked-dates.js # Admin: block/unblock dates
+├── database-schema.sql        # Supabase schema (run in SQL Editor)
+├── netlify.toml               # Build config, redirects, scheduled functions
+└── .env.example               # Environment variable template
 ```
 
-### JavaScript Architecture
+## Database Schema (Supabase)
 
-#### Manager Classes Pattern
-Each feature is encapsulated in a manager class with singleton instances:
+Four main tables:
+- **bounce_houses**: Inventory with pricing, dimensions, capacity
+- **bookings**: Customer info, event details, payment status, waiver tracking
+- **blocked_dates**: Holidays and unavailable dates
+- **promo_codes**: Discount codes with validation rules
 
-1. **App** (`js/app.js`)
-   - Global initialization and error handling
-   - Utility methods: `formatCurrency()`, `formatPhoneNumber()`, `isValidEmail()`
-   - Image error handling with mutation observers
-   - Available globally as `window.MyBounceApp`
+Run `database-schema.sql` in Supabase SQL Editor to create tables and seed data.
 
-2. **NavigationManager** (`js/navigation.js`)
-   - Hash-based routing (#home, #bounce-houses, etc.)
-   - Browser history management (back/forward buttons)
-   - Page-specific initialization hooks
-   - Global functions: `showPage(pageName)`, `showBounceHouseDetail(id)`
-   - Available globally as `window.navigationManager`
+## Booking Flow
 
-3. **BounceHouseManager** (`js/bouncehouses.js`)
-   - Renders bounce house listings and detail views
-   - Search and theme filtering
-   - Image gallery with thumbnails
-   - Booking flow initiation
-   - Available globally as `window.BounceHouseManager`
+1. User clicks "Book Now" on pricing card
+2. Modal opens with `AvailabilityCalendar` component
+3. Calendar fetches availability from `get-calendar` function
+4. User selects date, fills form, optionally applies promo code
+5. `create-checkout` creates Supabase booking + Stripe session
+6. User redirected to Stripe Checkout (50% deposit)
+7. `stripe-webhook` confirms payment, updates booking, sends email
+8. User redirected to success page
 
-4. **BookingSystem** (`js/booking.js`)
-   - Handles booking form submissions
-   - Date availability checking with blocked dates
-   - Email integration (Formspree/EmailJS)
-   - Fallback contact options (mailto, SMS, phone)
-   - Available globally as `window.bookingSystem`
+## Frontend Patterns
 
-5. **ContactManager** (`js/contact.js`)
-   - Contact form validation and submission
-   - Field-level error handling
-   - Email automation via Formspree
-   - Date availability integration
-   - Available globally as `window.ContactManager`
+### Manager Classes
+Each feature is a singleton class attached to `window`:
+- `window.bookingSystem` - BookingSystem
+- `window.navigationManager` - NavigationManager
+- `window.BounceHouseManager` - BounceHouseManager
 
-6. **WaiverManager** (`js/waiver.js`)
-   - Digital signature capture using HTML5 Canvas
-   - Form validation for participants and guardians
-   - LocalStorage persistence for waiver submissions
-   - Available globally as `window.WaiverManager`
-
-### Data Layer (`js/data.js`)
-
-Central data source exported as global constants:
-
-- **`bounceHouses`** - Array of bounce house inventory with:
-  - id, name, description, theme
-  - dimensions (length, width, height)
-  - capacity (minAge, maxAge, maxWeight, maxOccupants)
-  - pricing (daily, weekend, weekly)
-  - images array, features, rating, isActive
-
-- **`themes`** - Array of theme categories for filtering
-
-- **`companyInfo`** - Business contact information:
-  - name: "My Bounce Place"
-  - phone: "(385) 288-8065"
-  - email: "noreply@mybounceplace.com"
-  - hours, serviceArea
-
-- **`faqData`** - FAQ questions and answers
-
-- **`waiverText`** - Liability waiver template
-
-### Navigation System
-
-The app uses **hash-based routing** to simulate multiple pages:
-- URL format: `https://example.com/#page-name`
-- Pages: `#home`, `#bounce-houses`, `#pricing`, `#about`, `#contact`, `#faq`, `#waiver`
-- Detail pages: Dynamically rendered (e.g., bounce house details)
-
-**Important**: Pages are divs with class `.page` and id `{name}-page`:
-```html
-<div id="home-page" class="page active">...</div>
-<div id="contact-page" class="page">...</div>
-```
-
-The active page has class `active` applied. Navigation is handled by:
-1. User clicks nav link → `showPage(pageName)` called
-2. All pages get `active` class removed
-3. Target page gets `active` class added
-4. URL hash updated (browser history)
-5. Page-specific initialization runs
-
-### Form Handling
-
-All forms use **client-side submission** to prevent page reloads:
-
+### Modal Pattern
 ```javascript
-form.addEventListener('submit', (e) => {
-    e.preventDefault(); // Prevent default form submission
-    // Custom handling here
-});
+// Create modal, add 'show' class to display
+modal.classList.add('show');
+// Close handlers: X button, backdrop click, Escape key
+modal.remove();
 ```
 
-**Email Integration**:
-1. Primary: Formspree (https://formspree.io/f/mgvzkqgp)
-2. Fallback: EmailJS (needs configuration)
-3. Ultimate fallback: mailto links, SMS links, phone links
+### Page Navigation
+```javascript
+showPage('contact');  // Shows #contact-page div
+// Pages are: home, bounce-houses, pricing, about, contact, faq, waiver
+```
 
-**Data Persistence**:
-- All submissions saved to localStorage as backup
-- Keys: `contactMessages`, `bookingRequests`, `waivers`
-- Format: Array of objects with id, timestamp, status
+## API Endpoints
 
-### Date Availability System
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/check-availability` | POST | Check single date |
+| `/get-calendar` | GET | Month availability |
+| `/create-checkout` | POST | Create booking + Stripe session |
+| `/stripe-webhook` | POST | Handle payment events |
+| `/validate-promo` | POST | Validate promo code |
+| `/admin-login` | POST | Admin authentication |
+| `/get-bookings` | GET | List bookings (auth required) |
+| `/update-booking` | PUT | Update booking (auth required) |
+| `/manage-blocked-dates` | GET/POST/DELETE | Blocked dates |
 
-Blocked dates are hardcoded in multiple files for consistency:
-- `js/booking.js` - BookingSystem class
-- `js/contact.js` - ContactManager class
+## Pricing Logic
 
-**Current blocked dates** (update in both files):
-- Major holidays: Christmas, New Year's, Memorial Day, July 4th, Labor Day, Thanksgiving, etc.
-- Format: 'YYYY-MM-DD' strings in array
+- Daily: $150, Weekend: $200, Weekly: $800
+- Delivery: $20 (Cache Valley zips: 84321, 84322, 84325, 84326, 84332, 84333, 84335, 84339, 84341), $50 outside
+- Deposit: 50% of total at booking
 
-Visual feedback:
-- Available dates: green background (#d4edda)
-- Blocked dates: red background (#f8d7da) with strikethrough
+## Important Notes
+
+- **Blocked dates**: Now stored in database, not hardcoded. Fallback to local array if API fails.
+- **Stripe webhook**: Must be configured in Stripe Dashboard pointing to `/.netlify/functions/stripe-webhook`
+- **Admin dashboard**: Access at `/admin.html`, login with ADMIN_EMAIL/ADMIN_PASSWORD
+- **Scheduled reminders**: `send-reminders` function runs daily at 9 AM UTC (configured in netlify.toml)
 
 ## Business Information
 
-### Contact Details
-- **Business**: My Bounce Place
 - **Phone**: (385) 288-8065
 - **Email**: noreply@mybounceplace.com
+- **Service Area**: Logan, Utah and Cache Valley
 - **Hours**: Monday - Sunday, 8:00 AM - 8:00 PM
-- **Location**: Logan, Utah
-
-### Service Area
-- Primary: Logan, Utah
-- Also serves: Smithfield, Hyrum, Providence, North Logan, Cache Valley
-- Delivery & setup fee: $20 inside Cache Valley or within 15 miles of Logan
-- Delivery & setup fee: $50 outside Cache Valley
-
-### Pricing
-- **Daily Rental**: $150 (up to 8 hours)
-- **Weekend Rental**: $200 (Friday pickup to Sunday return)
-- **Weekly Rental**: $800 (7 days)
-- **Security Deposit**: $100 (refundable)
-- **Late Pickup**: $25 per hour
-- **Cleaning Fee**: $50 (if excessive damage)
-
-### Payment Methods
-- Cash, check, credit cards, Venmo
-- Venmo: @mybounceplace
-
-### Current Inventory
-- **Bounce Castle with a Slide**
-  - Dimensions: 15' × 15' × 12'
-  - Capacity: 8 children (ages 3-12, max 150 lbs each)
-  - Features: Slide, basketball hoop, mesh safety walls, anchor points
-  - Rating: 4.8/5
-
-## Common Development Tasks
-
-### Adding a New Bounce House
-1. Edit `js/data.js`
-2. Add new object to `bounceHouses` array with all required fields
-3. Add theme to `themes` array if new
-4. Add images to `images/` folder
-5. No rebuild required - refresh browser
-
-### Updating Business Information
-Edit `companyInfo` object in `js/data.js`:
-- Changes affect contact page, footer, and all references
-
-### Modifying Blocked Dates
-Update blocked dates arrays in BOTH:
-1. `js/booking.js` - BookingSystem.checkBookingAvailability()
-2. `js/contact.js` - ContactManager.checkDateAvailability()
-
-### Adding a New Page
-1. Add page div to `index.html`: `<div id="newpage-page" class="page">...</div>`
-2. Add nav link: `<a href="#newpage" class="nav-link" data-page="newpage">New Page</a>`
-3. Add case to `NavigationManager.handlePageSpecificLogic()` if initialization needed
-
-### Styling Changes
-Edit `css/styles.css` directly - changes visible on refresh
-
-### Email Configuration
-**Formspree** (current):
-- Endpoint: https://formspree.io/f/mgvzkqgp
-- No configuration needed in code
-
-**EmailJS** (alternative):
-- Requires setting up EmailJS account
-- Update placeholders in code:
-  - `YOUR_EMAILJS_PUBLIC_KEY`
-  - `YOUR_EMAILJS_SERVICE_ID`
-  - `YOUR_EMAILJS_TEMPLATE_ID`
-
-### Analytics
-Google Analytics 4 integration:
-- Tracking ID: G-XXXXXXXXXX (placeholder - needs real ID)
-- Events tracked: page views, booking requests, form submissions
-
-## Important Implementation Notes
-
-### Image Handling
-- Images may fail to load (404s are expected)
-- Automatic fallback to placeholder styling
-- Mutation observer watches for dynamically added images
-- Error handling prevents broken image icons
-
-### LocalStorage Usage
-- All form submissions backed up to localStorage
-- Useful for debugging: `localStorage.getItem('contactMessages')`
-- Clear with: `localStorage.removeItem('contactMessages')`
-- View in DevTools: Application → Local Storage
-
-### Modal System
-Modals are managed through CSS classes:
-- Add class `show` to display modal
-- Close button removes modal or removes `show` class
-- Escape key closes all modals (handled in app.js)
-
-### URL Parameter Handling
-- Contact and booking forms prevent URL parameter pollution
-- Formspree may add `?success=true` - code strips this
-- Navigation maintains clean URLs with hash only
-
-### Service Worker (PWA)
-- Registered in index.html
-- Enables offline functionality
-- Caches static assets
-- Edit `sw.js` to modify caching strategy
-
-## SEO and Schema.org
-
-The site includes extensive structured data for:
-- LocalBusiness schema
-- FAQ schema
-- Product/Service schemas
-- Reviews and ratings
-
-Located in `<script type="application/ld+json">` tags in index.html
-
-## Testing
-
-### Manual Testing Checklist
-1. Navigate through all pages using navbar
-2. Test browser back/forward buttons
-3. Submit contact form (check localStorage)
-4. Submit booking form (check localStorage)
-5. Try waiver form with signature pad
-6. Search and filter bounce houses
-7. View bounce house details
-8. Test on mobile viewport
-9. Check image error handling
-10. Test date availability checker
-
-### Browser Console Debugging
-```javascript
-// View all stored data
-localStorage.getItem('contactMessages')
-localStorage.getItem('bookingRequests')
-localStorage.getItem('waivers')
-
-// Access manager instances
-window.navigationManager
-window.BounceHouseManager
-window.ContactManager
-window.bookingSystem
-
-// Manual navigation
-showPage('contact')
-showBounceHouseDetail('1')
-```
-
-## Deployment
-
-This is a static site - deployment is simple:
-
-### Supported Platforms
-- **Netlify**: Drag and drop folder or connect Git repo
-- **Vercel**: Import Git repo
-- **GitHub Pages**: Push to gh-pages branch
-- **AWS S3**: Upload files with static hosting enabled
-- **Firebase Hosting**: Use Firebase CLI
-- **Any web host**: Upload via FTP
-
-### Pre-Deployment Checklist
-1. Update Google Analytics ID in index.html
-2. Configure EmailJS if using (or keep Formspree)
-3. Add real business images to /images/
-4. Test all forms submit successfully
-5. Verify blocked dates are current
-6. Check contact information is accurate
-7. Test on multiple browsers and devices
-
-### Post-Deployment
-- Submit sitemap to Google Search Console
-- Monitor form submissions in Formspree dashboard
-- Check analytics tracking is working
-- Test email deliverability
-
-### Netlify Configuration
-
-The project includes Netlify-specific configuration files:
-
-**netlify.toml**:
-- HTTP to HTTPS redirects (forces secure connections)
-- www to non-www redirects (canonical URL structure)
-- Security headers:
-  - X-Frame-Options: DENY (prevents clickjacking)
-  - X-XSS-Protection: 1; mode=block
-  - X-Content-Type-Options: nosniff
-  - Referrer-Policy: strict-origin-when-cross-origin
-  - Strict-Transport-Security with preload
-
-**_redirects**:
-- Backup redirect rules in Netlify's simplified format
-- Ensures consistent URL structure across all entry points
-- All traffic redirected to https://mybounceplace.com (non-www, HTTPS)
-
-**CNAME**:
-- Custom domain configuration for GitHub Pages fallback
-- Contains: mybounceplace.com
-
-## Version Control
-
-The repository uses Git with standard ignores for:
-- Node modules (if development tools are added)
-- Environment variables (.env files)
-- Editor configurations (.vscode, .idea)
-- OS-specific files (.DS_Store, Thumbs.db)
-- Temporary and backup files
-
-Note: No sensitive information (API keys, credentials) should be committed to the repository.
-
-## Known Limitations
-
-1. **No backend** - all form data goes to third-party services or localStorage
-2. **No real-time availability** - blocked dates are hardcoded
-3. **No payment processing** - booking requests require manual follow-up
-4. **No CMS** - content updates require code changes
-5. **No search engine** - basic client-side filtering only
-
-## Related Documentation
-
-- AI Training Instructions: `ai-training-instructions.md`
-- AI Training Data: `ai-training-data.json`
-- Original README: `README.md`

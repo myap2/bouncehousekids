@@ -138,7 +138,11 @@ class NavigationManager {
                 }
                 break;
             case 'bounce-house-detail':
-                // This will be handled separately when viewing a specific bounce house
+                // If page is refreshed on detail view without context, redirect to bounce houses list
+                const detailContent = document.getElementById('bounce-house-detail-content');
+                if (detailContent && !detailContent.innerHTML.trim()) {
+                    this.showPage('bounce-houses');
+                }
                 break;
             case 'waiver':
                 if (window.WaiverManager) {
