@@ -18,11 +18,15 @@ class BookingSystem {
     setupBookingButtons() {
         // Add booking buttons to all pricing cards
         const pricingCards = document.querySelectorAll('.pricing-card');
-        pricingCards.forEach(card => {
+        console.log('BookingSystem: Found', pricingCards.length, 'pricing cards');
+        pricingCards.forEach((card, index) => {
             const bookButton = card.querySelector('.hero-button');
+            console.log('BookingSystem: Card', index, 'button found:', !!bookButton);
             if (bookButton) {
                 bookButton.addEventListener('click', (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
+                    console.log('BookingSystem: Book Now clicked');
                     this.showBookingModal(card);
                 });
             }
@@ -111,6 +115,7 @@ class BookingSystem {
         // Map display name to rental type key
         const rentalTypeMap = {
             'Daily Rental': 'daily',
+            'Weekend Rental': 'weekend',
             'Weekend Special': 'weekend',
             'Weekly Rental': 'weekly'
         };
