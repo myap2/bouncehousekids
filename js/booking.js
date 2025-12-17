@@ -122,7 +122,7 @@ class BookingSystem {
         modal.id = 'booking-modal';
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 600px;">
-                <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                <span class="close">&times;</span>
                 <h3>Book Your Bounce House</h3>
                 <p><strong>Package:</strong> ${pricingType}</p>
 
@@ -203,6 +203,31 @@ class BookingSystem {
         `;
 
         document.body.appendChild(modal);
+
+        // Show modal (add 'show' class)
+        modal.classList.add('show');
+
+        // Setup close handlers
+        const closeBtn = modal.querySelector('.close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => modal.remove());
+        }
+
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+
+        // Close on Escape key
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
 
         // Initialize calendar
         this.calendar = new AvailabilityCalendar('booking-calendar-container', {
