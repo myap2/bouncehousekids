@@ -1,0 +1,13 @@
+{
+  "name": "mybounceplace",
+  "version": "1.0.0",
+  "description": "My Bounce Place - Bounce house rental website",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "googleapis": "^129.0.0",
+    "resend": "^2.0.0",
+    "stripe": "^14.10.0",
+    "twilio": "^4.20.0"
+  }
+}

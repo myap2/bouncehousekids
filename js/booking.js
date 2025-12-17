@@ -212,9 +212,9 @@ class BookingSystem {
                     </div>
                     <div class="form-group">
                         <label for="booking-promo">Promo Code</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="booking-promo" name="promoCode" placeholder="Enter code" style="flex: 1; text-transform: uppercase;">
-                            <button type="button" id="apply-promo-btn" class="submit-btn" style="padding: 10px 15px; font-size: 0.9rem;">Apply</button>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="booking-promo" name="promoCode" placeholder="Enter code" style="flex: 1; text-transform: uppercase; min-width: 0;">
+                            <button type="button" id="apply-promo-btn" class="submit-btn" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap; flex-shrink: 0;">Apply</button>
                         </div>
                         <div id="promo-message" style="margin-top: 5px; font-size: 0.9rem;"></div>
                     </div>
