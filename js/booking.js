@@ -108,6 +108,18 @@ class BookingSystem {
         history.replaceState(null, '', window.location.pathname + '#home');
     }
 
+    // Show booking modal for a specific bounce house (called from bounce house detail page)
+    showBookingModalForBounceHouse(house) {
+        // Default to daily rental, user can change
+        this.showBookingModalWithOptions({
+            bounceHouseId: house.id,
+            bounceHouseName: house.name,
+            rentalType: 'daily',
+            pricingType: 'Daily Rental',
+            basePrice: house.price.daily
+        });
+    }
+
     showBookingModal(pricingCard) {
         const pricingType = pricingCard.querySelector('h3').textContent;
         const priceText = pricingCard.querySelector('div[style*="font-size: 2.5rem"]').textContent;
@@ -121,6 +133,21 @@ class BookingSystem {
         };
         const rentalType = rentalTypeMap[pricingType] || 'daily';
 
+        this.showBookingModalWithOptions({
+            bounceHouseId: null,
+            bounceHouseName: null,
+            rentalType: rentalType,
+            pricingType: pricingType,
+            basePrice: null
+        });
+    }
+
+    showBookingModalWithOptions(options) {
+        const { bounceHouseId, bounceHouseName, rentalType, pricingType } = options;
+
+        // Store the current bounce house ID for use in booking
+        this.currentBounceHouseId = bounceHouseId;
+
         // Create booking modal with calendar
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -129,6 +156,7 @@ class BookingSystem {
             <div class="modal-content" style="max-width: 600px;">
                 <span class="close">&times;</span>
                 <h3>Book Your Bounce House</h3>
+                ${bounceHouseName ? `<p><strong>Bounce House:</strong> ${bounceHouseName}</p>` : ''}
                 <p><strong>Package:</strong> ${pricingType}</p>
 
                 <div id="booking-calendar-container" style="margin: 20px 0;"></div>
@@ -414,7 +442,7 @@ class BookingSystem {
             // Collect form data
             const formData = new FormData(form);
             const bookingData = {
-                bounceHouseId: null, // Will use default if only one
+                bounceHouseId: this.currentBounceHouseId || null,
                 eventDate: this.selectedDate,
                 eventTime: formData.get('eventTime'),
                 rentalType: rentalType,

@@ -217,33 +217,21 @@ class BounceHouseManager {
         });
     }
 
-    // Handle booking action
+    // Handle booking action - opens the booking modal with calendar
     bookBounceHouse(bounceHouseId) {
         const house = bounceHouses.find(h => h.id === bounceHouseId);
         if (!house) return;
 
-        // Store the selected bounce house for the waiver
+        // Store the selected bounce house
         localStorage.setItem('selectedBounceHouse', JSON.stringify(house));
-        
-        // Show success message with next steps
-        this.showBookingModal(house);
-    }
 
-    // Show booking information modal
-    showBookingModal(house) {
-        const modal = document.getElementById('success-modal');
-        const message = document.getElementById('success-message');
-        
-        if (modal && message) {
-            message.innerHTML = `
-                <strong>Great choice!</strong> You've selected the ${house.name}.<br><br>
-                <strong>Next Steps:</strong><br>
-                1. <a href="#" onclick="showPage('waiver')" style="color: #007bff;">Complete the waiver form</a><br>
-                2. Call us at ${companyInfo.phone} to confirm your booking<br>
-                3. We'll handle delivery, setup, and pickup!<br><br>
-                <em>Price: $${house.price.daily}/day</em>
-            `;
-            modal.classList.add('show');
+        // Use the BookingSystem to show the booking modal with calendar
+        if (window.bookingSystem) {
+            window.bookingSystem.showBookingModalForBounceHouse(house);
+        } else {
+            // Fallback if booking system isn't ready
+            console.error('BookingSystem not initialized');
+            alert('Booking system is loading. Please try again.');
         }
     }
 }

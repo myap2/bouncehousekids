@@ -66,7 +66,34 @@ class NavigationManager {
         // Check URL hash for initial page
         const hash = window.location.hash.substring(1);
         let page = hash || 'home';
-        
+
+        // Handle bounce house detail page on refresh - check if we have stored bounce house data
+        if (page === 'bounce-house-detail') {
+            const storedBounceHouse = localStorage.getItem('selectedBounceHouse');
+            if (storedBounceHouse) {
+                try {
+                    const house = JSON.parse(storedBounceHouse);
+                    // We have stored data, render the detail page
+                    if (window.BounceHouseManager && house.id) {
+                        window.BounceHouseManager.renderBounceHouseDetail(house.id);
+                    } else {
+                        // Manager not ready yet, wait for it
+                        setTimeout(() => {
+                            if (window.BounceHouseManager && house.id) {
+                                window.BounceHouseManager.renderBounceHouseDetail(house.id);
+                            }
+                        }, 100);
+                    }
+                } catch (e) {
+                    // Invalid stored data, redirect to bounce houses list
+                    page = 'bounce-houses';
+                }
+            } else {
+                // No stored data, redirect to bounce houses list
+                page = 'bounce-houses';
+            }
+        }
+
         // If no hash, try to detect current page from DOM
         if (!hash) {
             const activePage = document.querySelector('.page.active');
@@ -77,7 +104,7 @@ class NavigationManager {
                 }
             }
         }
-        
+
         this.showPage(page, false);
     }
 
@@ -162,6 +189,14 @@ class NavigationManager {
 
     // Method to show bounce house detail page
     showBounceHouseDetail(bounceHouseId) {
+        // Store the bounce house ID for page refresh recovery
+        if (typeof bounceHouses !== 'undefined') {
+            const house = bounceHouses.find(h => h.id === bounceHouseId);
+            if (house) {
+                localStorage.setItem('selectedBounceHouse', JSON.stringify(house));
+            }
+        }
+
         if (window.BounceHouseManager) {
             window.BounceHouseManager.renderBounceHouseDetail(bounceHouseId);
         }
