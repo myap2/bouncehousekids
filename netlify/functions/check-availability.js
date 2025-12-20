@@ -81,30 +81,60 @@ exports.handler = async (event) => {
       };
     }
 
-    // Check existing bookings for this date
-    let query = supabase
+    // Check confirmed bookings (always block)
+    let confirmedQuery = supabase
       .from('bookings')
       .select('id')
       .eq('event_date', date)
-      .in('status', ['pending', 'confirmed']);
+      .eq('status', 'confirmed');
 
     if (bounceHouseId) {
-      query = query.eq('bounce_house_id', bounceHouseId);
+      confirmedQuery = confirmedQuery.eq('bounce_house_id', bounceHouseId);
     }
 
-    const { data: existingBookings, error: bookingError } = await query;
+    const { data: confirmedBookings, error: confirmedError } = await confirmedQuery;
 
-    if (bookingError) {
-      throw bookingError;
+    if (confirmedError) {
+      throw confirmedError;
     }
 
-    if (existingBookings && existingBookings.length > 0) {
+    if (confirmedBookings && confirmedBookings.length > 0) {
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           available: false,
           reason: 'This date is already booked',
+        }),
+      };
+    }
+
+    // Check pending bookings created in last 10 minutes (temporary hold)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    let pendingQuery = supabase
+      .from('bookings')
+      .select('id')
+      .eq('event_date', date)
+      .eq('status', 'pending')
+      .gte('created_at', tenMinutesAgo);
+
+    if (bounceHouseId) {
+      pendingQuery = pendingQuery.eq('bounce_house_id', bounceHouseId);
+    }
+
+    const { data: pendingBookings, error: pendingError } = await pendingQuery;
+
+    if (pendingError) {
+      throw pendingError;
+    }
+
+    if (pendingBookings && pendingBookings.length > 0) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          available: false,
+          reason: 'This date is temporarily held - try again in a few minutes',
         }),
       };
     }

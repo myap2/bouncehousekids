@@ -75,23 +75,46 @@ exports.handler = async (event) => {
       throw blockedError;
     }
 
-    // Fetch existing bookings
-    let bookingsQuery = supabase
+    // Fetch confirmed bookings (always block)
+    let confirmedQuery = supabase
       .from('bookings')
       .select('event_date')
       .gte('event_date', startDate)
       .lte('event_date', endDate)
-      .in('status', ['pending', 'confirmed']);
+      .eq('status', 'confirmed');
 
     if (bounceHouseId) {
-      bookingsQuery = bookingsQuery.eq('bounce_house_id', bounceHouseId);
+      confirmedQuery = confirmedQuery.eq('bounce_house_id', bounceHouseId);
     }
 
-    const { data: bookings, error: bookingsError } = await bookingsQuery;
+    const { data: confirmedBookings, error: confirmedError } = await confirmedQuery;
 
-    if (bookingsError) {
-      throw bookingsError;
+    if (confirmedError) {
+      throw confirmedError;
     }
+
+    // Fetch pending bookings created in last 10 minutes (temporary hold)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    let pendingQuery = supabase
+      .from('bookings')
+      .select('event_date')
+      .gte('event_date', startDate)
+      .lte('event_date', endDate)
+      .eq('status', 'pending')
+      .gte('created_at', tenMinutesAgo);
+
+    if (bounceHouseId) {
+      pendingQuery = pendingQuery.eq('bounce_house_id', bounceHouseId);
+    }
+
+    const { data: pendingBookings, error: pendingError } = await pendingQuery;
+
+    if (pendingError) {
+      throw pendingError;
+    }
+
+    // Combine both confirmed and recent pending bookings
+    const bookings = [...(confirmedBookings || []), ...(pendingBookings || [])];
 
     // Build blocked dates set
     const blockedDatesSet = new Set(blockedDates?.map(d => d.date) || []);
