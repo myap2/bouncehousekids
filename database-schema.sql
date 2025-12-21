@@ -173,3 +173,45 @@ CREATE POLICY "Allow service role full access to bookings" ON bookings
 
 CREATE POLICY "Allow service role full access to blocked_dates" ON blocked_dates
   USING (true) WITH CHECK (true);
+
+-- ============================================
+-- Add-Ons Table (Party Supplies, Equipment)
+-- ============================================
+CREATE TABLE IF NOT EXISTS add_ons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  category VARCHAR(50) NOT NULL DEFAULT 'party_supplies', -- 'party_supplies', 'equipment', etc.
+  price_per_unit DECIMAL(10,2) NOT NULL,
+  max_quantity INTEGER DEFAULT 20,
+  is_active BOOLEAN DEFAULT true,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_add_ons_active ON add_ons(is_active);
+CREATE INDEX IF NOT EXISTS idx_add_ons_category ON add_ons(category);
+
+-- Enable RLS for add_ons
+ALTER TABLE add_ons ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to add_ons" ON add_ons
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow service role full access to add_ons" ON add_ons
+  USING (true) WITH CHECK (true);
+
+-- Seed party supplies add-ons
+INSERT INTO add_ons (name, description, category, price_per_unit, max_quantity, sort_order)
+VALUES
+  ('Folding Table (6ft)', 'Standard 6-foot rectangular folding table', 'party_supplies', 10.00, 10, 1),
+  ('Folding Chair', 'White folding chair', 'party_supplies', 2.00, 50, 2),
+  ('Pop-up Canopy (10x10)', '10x10 foot white pop-up canopy tent', 'party_supplies', 35.00, 4, 3),
+  ('Party Tent (20x20)', 'Large 20x20 foot party tent', 'party_supplies', 75.00, 2, 4)
+ON CONFLICT DO NOTHING;
+
+-- ============================================
+-- Add add-ons columns to bookings table
+-- ============================================
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS add_ons JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS add_ons_total DECIMAL(10,2) DEFAULT 0;

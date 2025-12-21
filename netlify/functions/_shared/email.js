@@ -38,7 +38,7 @@ async function sendEmail({ to, subject, html, text }) {
 }
 
 async function sendBookingConfirmation(booking) {
-  const { customer_name, customer_email, event_date, event_address, rental_type, total_amount, deposit_amount } = booking;
+  const { customer_name, customer_email, event_date, event_address, rental_type, total_amount, deposit_amount, add_ons, add_ons_total } = booking;
 
   const formattedDate = new Date(event_date).toLocaleDateString('en-US', {
     weekday: 'long',
@@ -46,6 +46,19 @@ async function sendBookingConfirmation(booking) {
     month: 'long',
     day: 'numeric'
   });
+
+  // Format add-ons for display
+  let addOnsHtml = '';
+  if (add_ons && Array.isArray(add_ons) && add_ons.length > 0) {
+    const addOnsList = add_ons.map(a =>
+      `<li>${a.quantity}x ${a.name} - $${(a.subtotal || (a.quantity * a.price_per_unit)).toFixed(2)}</li>`
+    ).join('');
+    addOnsHtml = `
+        <p><strong>Add-ons:</strong></p>
+        <ul style="margin: 0 0 10px 20px;">${addOnsList}</ul>
+        <p><strong>Add-ons Total:</strong> $${(add_ons_total || 0).toFixed(2)}</p>
+    `;
+  }
 
   const customerHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -58,6 +71,7 @@ async function sendBookingConfirmation(booking) {
         <p><strong>Event Date:</strong> ${formattedDate}</p>
         <p><strong>Location:</strong> ${event_address}</p>
         <p><strong>Rental Type:</strong> ${rental_type}</p>
+        ${addOnsHtml}
         <p><strong>Total Amount:</strong> $${total_amount}</p>
         <p><strong>Deposit Paid:</strong> $${deposit_amount}</p>
         <p><strong>Balance Due:</strong> $${(total_amount - deposit_amount).toFixed(2)}</p>
@@ -96,6 +110,7 @@ async function sendBookingConfirmation(booking) {
         <p><strong>Rental Type:</strong> ${rental_type}</p>
         <p><strong>Guests:</strong> ${booking.guests_count || 'Not specified'}</p>
         <p><strong>Special Requests:</strong> ${booking.special_requests || 'None'}</p>
+        ${addOnsHtml}
       </div>
 
       <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">

@@ -222,6 +222,47 @@ const BookingAPI = {
       return { valid: false, error: 'Failed to validate promo code' };
     }
   },
+
+  /**
+   * Fetch available add-ons
+   * @param {string} [category] - Optional category filter (default: 'party_supplies')
+   * @returns {Promise<{addOns: Array}>}
+   */
+  async getAddOns(category = 'party_supplies') {
+    // Fallback add-ons data
+    const fallbackAddOns = [
+      { id: 'table-6ft', name: 'Folding Table (6ft)', description: 'Standard 6-foot rectangular folding table', price_per_unit: 10.00, max_quantity: 10 },
+      { id: 'chair', name: 'Folding Chair', description: 'White folding chair', price_per_unit: 2.00, max_quantity: 50 },
+      { id: 'canopy-10x10', name: 'Pop-up Canopy (10x10)', description: '10x10 foot white pop-up canopy tent', price_per_unit: 35.00, max_quantity: 4 },
+      { id: 'tent-20x20', name: 'Party Tent (20x20)', description: 'Large 20x20 foot party tent', price_per_unit: 75.00, max_quantity: 2 },
+    ];
+
+    try {
+      const params = new URLSearchParams({ category });
+      const response = await fetch(`${this.BASE_URL}/get-add-ons?${params}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch add-ons');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching add-ons:', error);
+      return { addOns: fallbackAddOns };
+    }
+  },
+
+  /**
+   * Calculate add-ons total price
+   * @param {Array} selectedAddOns - Array of {id, quantity, price_per_unit}
+   * @returns {number} Total add-ons price
+   */
+  calculateAddOnsTotal(selectedAddOns) {
+    if (!selectedAddOns || !Array.isArray(selectedAddOns)) return 0;
+    return selectedAddOns.reduce((total, addOn) => {
+      return total + (addOn.quantity * addOn.price_per_unit);
+    }, 0);
+  },
 };
 
 // Export for use in other modules

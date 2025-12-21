@@ -52,6 +52,7 @@ exports.handler = async (event) => {
       guestsCount,
       specialRequests,
       promoCode,
+      addOns,
     } = JSON.parse(event.body);
 
     // Validate required fields
@@ -79,7 +80,45 @@ exports.handler = async (event) => {
     const basePrice = PRICING[rentalType] || PRICING.daily;
     const deliveryZone = eventZip && CACHE_VALLEY_ZIPS.includes(eventZip) ? 'cache_valley' : 'outside';
     const deliveryFee = DELIVERY_FEES[deliveryZone];
-    let subtotal = basePrice + deliveryFee;
+
+    // Calculate add-ons pricing
+    let addOnsTotal = 0;
+    let processedAddOns = [];
+
+    if (addOns && Array.isArray(addOns) && addOns.length > 0 && supabase) {
+      // Fetch add-on details from database
+      const addOnIds = addOns.map(a => a.id);
+      const { data: addOnData, error: addOnError } = await supabase
+        .from('add_ons')
+        .select('id, name, price_per_unit, max_quantity')
+        .in('id', addOnIds)
+        .eq('is_active', true);
+
+      if (!addOnError && addOnData) {
+        const addOnMap = Object.fromEntries(addOnData.map(a => [a.id, a]));
+
+        for (const requested of addOns) {
+          const addOn = addOnMap[requested.id];
+          if (addOn && requested.quantity > 0) {
+            // Enforce max quantity
+            const quantity = Math.min(requested.quantity, addOn.max_quantity);
+            const subtotalItem = addOn.price_per_unit * quantity;
+            addOnsTotal += subtotalItem;
+
+            processedAddOns.push({
+              id: addOn.id,
+              name: addOn.name,
+              quantity,
+              price_per_unit: parseFloat(addOn.price_per_unit),
+              subtotal: Math.round(subtotalItem * 100) / 100,
+            });
+          }
+        }
+      }
+    }
+
+    addOnsTotal = Math.round(addOnsTotal * 100) / 100;
+    let subtotal = basePrice + deliveryFee + addOnsTotal;
     let discountAmount = 0;
     let appliedPromoCode = null;
 
@@ -147,6 +186,8 @@ exports.handler = async (event) => {
           special_requests: specialRequests,
           base_price: basePrice,
           delivery_fee: deliveryFee,
+          add_ons: processedAddOns.length > 0 ? processedAddOns : null,
+          add_ons_total: addOnsTotal,
           discount_amount: discountAmount,
           promo_code: appliedPromoCode,
           deposit_amount: depositAmount,
@@ -172,6 +213,14 @@ exports.handler = async (event) => {
       day: 'numeric',
     });
 
+    // Build description including add-ons
+    let description = `Event Date: ${formattedDate}\nLocation: ${eventAddress}`;
+    if (processedAddOns.length > 0) {
+      const addOnsList = processedAddOns.map(a => `${a.quantity}x ${a.name}`).join(', ');
+      description += `\nAdd-ons: ${addOnsList}`;
+    }
+    description += `\nDeposit (50% of $${totalAmount.toFixed(2)} total)`;
+
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -183,7 +232,7 @@ exports.handler = async (event) => {
             currency: 'usd',
             product_data: {
               name: `Bounce House Rental - ${rentalType.charAt(0).toUpperCase() + rentalType.slice(1)}`,
-              description: `Event Date: ${formattedDate}\nLocation: ${eventAddress}\nDeposit (50% of $${totalAmount.toFixed(2)} total)`,
+              description: description,
             },
             unit_amount: Math.round(depositAmount * 100), // Stripe expects cents
           },
@@ -197,6 +246,7 @@ exports.handler = async (event) => {
         customer_name: customerName,
         total_amount: totalAmount.toString(),
         deposit_amount: depositAmount.toString(),
+        add_ons_total: addOnsTotal.toString(),
       },
       success_url: `${siteUrl}/#booking-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/#booking-cancelled`,
@@ -220,6 +270,8 @@ exports.handler = async (event) => {
         pricing: {
           basePrice,
           deliveryFee,
+          addOnsTotal,
+          addOns: processedAddOns,
           discountAmount,
           promoCode: appliedPromoCode,
           subtotal,

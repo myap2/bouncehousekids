@@ -5,6 +5,8 @@ class BookingSystem {
         this.selectedDate = null;
         this.calendar = null;
         this.currentPricing = null;
+        this.selectedAddOns = {};  // { addOnId: { id, name, quantity, price_per_unit } }
+        this.availableAddOns = []; // Fetched from API
         this.initializeBookingSystem();
     }
 
@@ -161,6 +163,13 @@ class BookingSystem {
 
                 <div id="booking-calendar-container" style="margin: 20px 0;"></div>
 
+                <div id="add-ons-section" style="display: none; margin: 20px 0;">
+                    <h4 style="margin-bottom: 15px;">Party Supplies (Optional)</h4>
+                    <div id="add-ons-container">
+                        <p style="color: #666; font-size: 0.9rem;">Loading add-ons...</p>
+                    </div>
+                </div>
+
                 <div id="pricing-breakdown" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
                     <h4 style="margin-top: 0;">Pricing</h4>
                     <div id="pricing-details"></div>
@@ -281,6 +290,10 @@ class BookingSystem {
         promoBtn.addEventListener('click', () => this.applyPromoCode(rentalType));
 
         this.setupBookingForm(rentalType);
+
+        // Reset add-ons selection for new booking and load add-ons
+        this.selectedAddOns = {};
+        this.loadAddOns(rentalType);
     }
 
     async applyPromoCode(rentalType) {
@@ -326,6 +339,99 @@ class BookingSystem {
         }
     }
 
+    async loadAddOns(rentalType) {
+        const container = document.getElementById('add-ons-container');
+        const section = document.getElementById('add-ons-section');
+
+        if (!container || !section) return;
+
+        try {
+            const result = await BookingAPI.getAddOns();
+            this.availableAddOns = result.addOns || [];
+
+            if (this.availableAddOns.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = this.availableAddOns.map(addOn => `
+                <div class="add-on-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500;">${addOn.name}</div>
+                        <div style="color: #28a745; font-size: 0.9rem;">
+                            ${BookingAPI.formatCurrency(addOn.price_per_unit)} each
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="addon-qty-btn" data-addon-id="${addOn.id}" data-action="decrease"
+                                style="width: 32px; height: 32px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 1.2rem;">-</button>
+                        <span id="addon-qty-${addOn.id}" style="min-width: 30px; text-align: center; font-weight: bold;">0</span>
+                        <button type="button" class="addon-qty-btn" data-addon-id="${addOn.id}" data-action="increase" data-max="${addOn.max_quantity}"
+                                style="width: 32px; height: 32px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 1.2rem;">+</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add event listeners for quantity buttons
+            container.querySelectorAll('.addon-qty-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => this.handleAddOnQuantityChange(e, rentalType));
+            });
+
+        } catch (error) {
+            console.error('Error loading add-ons:', error);
+            section.style.display = 'none';
+        }
+    }
+
+    handleAddOnQuantityChange(e, rentalType) {
+        const btn = e.target;
+        const addOnId = btn.dataset.addonId;
+        const action = btn.dataset.action;
+        const maxQty = parseInt(btn.dataset.max) || 20;
+
+        const addOn = this.availableAddOns.find(a => a.id === addOnId);
+        if (!addOn) return;
+
+        // Get current quantity
+        let currentQty = this.selectedAddOns[addOnId]?.quantity || 0;
+
+        // Update quantity based on action
+        if (action === 'increase' && currentQty < maxQty) {
+            currentQty++;
+        } else if (action === 'decrease' && currentQty > 0) {
+            currentQty--;
+        }
+
+        // Update state
+        if (currentQty > 0) {
+            this.selectedAddOns[addOnId] = {
+                id: addOnId,
+                name: addOn.name,
+                quantity: currentQty,
+                price_per_unit: addOn.price_per_unit,
+            };
+        } else {
+            delete this.selectedAddOns[addOnId];
+        }
+
+        // Update display
+        const qtyDisplay = document.getElementById(`addon-qty-${addOnId}`);
+        if (qtyDisplay) {
+            qtyDisplay.textContent = currentQty;
+        }
+
+        // Update pricing display if date is selected
+        if (this.selectedDate) {
+            const zipInput = document.getElementById('booking-zip');
+            this.updatePricingDisplay(rentalType, zipInput?.value);
+        }
+    }
+
+    getSelectedAddOnsArray() {
+        return Object.values(this.selectedAddOns).filter(a => a.quantity > 0);
+    }
+
     handleDateSelection(date, dayData, rentalType) {
         const form = document.getElementById('booking-form');
         const dateInput = document.getElementById('booking-event-date');
@@ -352,12 +458,27 @@ class BookingSystem {
         const pricingDetails = document.getElementById('pricing-details');
         const pricing = BookingAPI.calculatePricing(rentalType, zip);
 
+        // Calculate add-ons total
+        const selectedAddOnsArray = this.getSelectedAddOnsArray();
+        const addOnsTotal = BookingAPI.calculateAddOnsTotal(selectedAddOnsArray);
+
+        // Calculate subtotal before discount (includes add-ons)
+        const subtotalBeforeDiscount = pricing.basePrice + pricing.deliveryFee + addOnsTotal;
+
         // Apply promo discount if available
         let discountAmount = 0;
         let discountHtml = '';
 
         if (this.appliedPromo && this.appliedPromo.valid) {
-            discountAmount = this.appliedPromo.discountAmount || 0;
+            // Recalculate discount based on new subtotal if percentage
+            if (this.appliedPromo.discountType === 'percentage') {
+                discountAmount = subtotalBeforeDiscount * (this.appliedPromo.discountValue / 100);
+            } else {
+                discountAmount = this.appliedPromo.discountAmount || 0;
+            }
+            discountAmount = Math.min(discountAmount, subtotalBeforeDiscount);
+            discountAmount = Math.round(discountAmount * 100) / 100;
+
             discountHtml = `
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #28a745;">
                     <span>Promo Discount (${this.appliedPromo.code}):</span>
@@ -366,13 +487,26 @@ class BookingSystem {
             `;
         }
 
-        const finalTotal = pricing.totalAmount - discountAmount;
+        // Build add-ons HTML
+        let addOnsHtml = '';
+        if (selectedAddOnsArray.length > 0) {
+            addOnsHtml = selectedAddOnsArray.map(addOn => `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #555; font-size: 0.95rem;">
+                    <span>${addOn.quantity}x ${addOn.name}:</span>
+                    <span>${BookingAPI.formatCurrency(addOn.quantity * addOn.price_per_unit)}</span>
+                </div>
+            `).join('');
+        }
+
+        const finalTotal = subtotalBeforeDiscount - discountAmount;
         const depositAmount = Math.round(finalTotal * 0.5 * 100) / 100;
         const balanceDue = finalTotal - depositAmount;
 
-        // Store current pricing with discount applied
+        // Store current pricing with add-ons and discount applied
         this.currentPricing = {
             ...pricing,
+            addOnsTotal,
+            selectedAddOns: selectedAddOnsArray,
             discountAmount,
             finalTotal,
             depositAmount,
@@ -388,6 +522,7 @@ class BookingSystem {
                 <span>Delivery Fee (${pricing.deliveryZone}):</span>
                 <span>${BookingAPI.formatCurrency(pricing.deliveryFee)}</span>
             </div>
+            ${addOnsHtml}
             ${discountHtml}
             <hr style="margin: 10px 0;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold;">
@@ -454,6 +589,10 @@ class BookingSystem {
                 guestsCount: formData.get('guests'),
                 specialRequests: formData.get('notes'),
                 promoCode: this.appliedPromo?.code || formData.get('promoCode') || null,
+                addOns: this.getSelectedAddOnsArray().map(a => ({
+                    id: a.id,
+                    quantity: a.quantity,
+                })),
             };
 
             // Check availability one more time
