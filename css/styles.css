@@ -1,3 +1,21 @@
+/* ============================================
+   CSS VARIABLES - Brand Colors
+   ============================================
+   These can be overridden by js/config.js
+   or directly edited here.
+*/
+:root {
+    --primary-color: #007bff;
+    --accent-color: #00bcd4;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --text-color: #333;
+    --text-light: #666;
+    --bg-light: #f8f9fa;
+    --bg-dark: #343a40;
+}
+
 /* Reset and base styles */
 * {
     margin: 0;
@@ -17,7 +35,7 @@ body {
 
 /* Navigation Styles */
 .navbar {
-    background: linear-gradient(45deg, #007bff, #00bcd4);
+    background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
     color: white;
     padding: 1rem 0;
     position: sticky;

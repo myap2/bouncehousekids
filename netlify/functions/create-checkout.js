@@ -1,22 +1,15 @@
 const { supabase } = require('./_shared/supabase');
 const { stripe } = require('./_shared/stripe');
+const { CONFIG } = require('./_shared/config');
 
-// Cache Valley zip codes
-const CACHE_VALLEY_ZIPS = ['84321', '84322', '84325', '84326', '84332', '84333', '84335', '84339', '84341'];
-
-// Pricing configuration
-const PRICING = {
-  daily: 150,
-  weekend: 200,
-  weekly: 800,
-};
-
+// Use config values (with fallbacks for backwards compatibility)
+const LOCAL_ZIPS = CONFIG.LOCAL_ZIPS.length > 0 ? CONFIG.LOCAL_ZIPS : ['84321', '84322', '84325', '84326', '84332', '84333', '84335', '84339', '84341'];
+const PRICING = CONFIG.PRICING;
 const DELIVERY_FEES = {
-  cache_valley: 20,
-  outside: 50,
+  local: CONFIG.DELIVERY_FEES.local,
+  outside: CONFIG.DELIVERY_FEES.outside,
 };
-
-const DEPOSIT_PERCENTAGE = 0.5; // 50% deposit
+const DEPOSIT_PERCENTAGE = CONFIG.DEPOSIT_PERCENTAGE;
 
 exports.handler = async (event) => {
   const headers = {
@@ -78,7 +71,7 @@ exports.handler = async (event) => {
 
     // Calculate pricing
     const basePrice = PRICING[rentalType] || PRICING.daily;
-    const deliveryZone = eventZip && CACHE_VALLEY_ZIPS.includes(eventZip) ? 'cache_valley' : 'outside';
+    const deliveryZone = eventZip && LOCAL_ZIPS.includes(eventZip) ? 'local' : 'outside';
     const deliveryFee = DELIVERY_FEES[deliveryZone];
 
     // Calculate add-ons pricing

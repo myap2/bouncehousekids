@@ -147,24 +147,36 @@ const BookingAPI = {
    * @returns {Object} Pricing breakdown
    */
   calculatePricing(rentalType, zip = null) {
-    const PRICING = {
+    // Use CONFIG if available, otherwise use defaults
+    const PRICING = typeof CONFIG !== 'undefined' && CONFIG.pricing ? {
+      daily: CONFIG.pricing.daily,
+      weekend: CONFIG.pricing.weekend,
+      weekly: CONFIG.pricing.weekly,
+    } : {
       daily: 150,
       weekend: 200,
       weekly: 800,
     };
 
-    const CACHE_VALLEY_ZIPS = ['84321', '84322', '84325', '84326', '84332', '84333', '84335', '84339', '84341'];
+    const LOCAL_ZIPS = typeof CONFIG !== 'undefined' && CONFIG.delivery ?
+      CONFIG.delivery.localZips :
+      ['84321', '84322', '84325', '84326', '84332', '84333', '84335', '84339', '84341'];
+
+    const localFee = typeof CONFIG !== 'undefined' && CONFIG.delivery ? CONFIG.delivery.localFee : 20;
+    const outsideFee = typeof CONFIG !== 'undefined' && CONFIG.delivery ? CONFIG.delivery.outsideFee : 50;
+    const localAreaName = typeof CONFIG !== 'undefined' && CONFIG.delivery ? CONFIG.delivery.localAreaName : 'Local Area';
 
     const basePrice = PRICING[rentalType] || PRICING.daily;
-    const isCacheValley = zip && CACHE_VALLEY_ZIPS.includes(zip);
-    const deliveryFee = isCacheValley ? 20 : 50;
+    const isLocal = zip && LOCAL_ZIPS.includes(zip);
+    const deliveryFee = isLocal ? localFee : outsideFee;
     const totalAmount = basePrice + deliveryFee;
-    const depositAmount = Math.round(totalAmount * 0.5 * 100) / 100;
+    const depositPercent = typeof CONFIG !== 'undefined' && CONFIG.pricing ? CONFIG.pricing.depositPercent : 0.5;
+    const depositAmount = Math.round(totalAmount * depositPercent * 100) / 100;
 
     return {
       basePrice,
       deliveryFee,
-      deliveryZone: isCacheValley ? 'Cache Valley' : 'Outside Cache Valley',
+      deliveryZone: isLocal ? localAreaName : `Outside ${localAreaName}`,
       totalAmount,
       depositAmount,
       balanceDue: totalAmount - depositAmount,

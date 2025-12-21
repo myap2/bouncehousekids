@@ -1,4 +1,5 @@
 // Bounce House Data - converted from database to JavaScript arrays
+// Note: Prices are pulled from CONFIG if available, otherwise use defaults
 const bounceHouses = [
     {
         id: '1',
@@ -16,10 +17,16 @@ const bounceHouses = [
             maxWeight: 150,
             maxOccupants: 8
         },
-        price: {
-            daily: 150,
-            weekly: 800,
-            weekend: 200
+        // Prices can be overridden by CONFIG if loaded
+        get price() {
+            if (typeof CONFIG !== 'undefined' && CONFIG.pricing) {
+                return {
+                    daily: CONFIG.pricing.daily,
+                    weekly: CONFIG.pricing.weekly,
+                    weekend: CONFIG.pricing.weekend
+                };
+            }
+            return { daily: 150, weekly: 800, weekend: 200 };
         },
         images: [
             'images/2025-08-16_13-53-15_509.jpeg',
@@ -42,13 +49,18 @@ const bounceHouses = [
 // Theme categories for filtering
 const themes = ['All', 'Castle'];
 
-// Company information
+// Company information - uses CONFIG if available
 const companyInfo = {
-    name: 'My Bounce Place',
-    phone: '(385) 288-8065',
-    email: 'noreply@mybounceplace.com',
-    hours: 'Monday - Sunday, 8:00 AM - 8:00 PM',
-    serviceArea: 'Delivery & setup fee: $20 inside Cache Valley or within 15 miles of Logan; $50 outside Cache Valley'
+    get name() { return typeof CONFIG !== 'undefined' ? CONFIG.business.name : 'Your Business Name'; },
+    get phone() { return typeof CONFIG !== 'undefined' ? CONFIG.business.phone : '(555) 123-4567'; },
+    get email() { return typeof CONFIG !== 'undefined' ? CONFIG.business.email : 'info@yourdomain.com'; },
+    get hours() { return typeof CONFIG !== 'undefined' ? CONFIG.business.hours : 'Monday - Sunday, 8:00 AM - 8:00 PM'; },
+    get serviceArea() {
+        if (typeof CONFIG !== 'undefined') {
+            return `Delivery & setup fee: $${CONFIG.delivery.localFee} inside ${CONFIG.delivery.localAreaName}; $${CONFIG.delivery.outsideFee} outside`;
+        }
+        return 'Delivery & setup fee: $20 inside local area; $50 outside';
+    }
 };
 
 // FAQ data
@@ -79,18 +91,24 @@ const faqData = [
     }
 ];
 
-// Waiver template text
-const waiverText = `BOUNCE HOUSE LIABILITY WAIVER
+// Waiver template text - uses CONFIG for business name
+const getWaiverText = () => {
+    const businessName = typeof CONFIG !== 'undefined' ? CONFIG.business.name : 'Your Business Name';
+    return `BOUNCE HOUSE LIABILITY WAIVER
 
 By signing, I acknowledge that using inflatable equipment involves risk. I agree to supervise all participants, follow safety rules, and stop use if conditions become unsafe.
 
-I release and hold harmless My Bounce Place, its owners, employees, and agents from any claims arising from use of the equipment.
+I release and hold harmless ${businessName}, its owners, employees, and agents from any claims arising from use of the equipment.
 
 I am at least 18 years old (or the parent/guardian of the participant) and I sign this waiver voluntarily.
 
 Date: ________________
 Participant Name: __________________________
 Signature: _________________________________`;
+};
+
+// For backwards compatibility
+const waiverText = typeof CONFIG !== 'undefined' ? getWaiverText() : getWaiverText();
 
 // Export data for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {

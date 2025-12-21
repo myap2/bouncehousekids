@@ -1,6 +1,10 @@
+const { CONFIG } = require('./config');
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@mybounceplace.com';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'bookings@mybounceplace.com';
+const ADMIN_EMAIL = CONFIG.ADMIN_EMAIL;
+const FROM_EMAIL = CONFIG.FROM_EMAIL;
+const BUSINESS_NAME = CONFIG.BUSINESS_NAME;
+const BUSINESS_PHONE = CONFIG.BUSINESS_PHONE;
 
 async function sendEmail({ to, subject, html, text }) {
   if (!RESEND_API_KEY) {
@@ -64,7 +68,7 @@ async function sendBookingConfirmation(booking) {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h1 style="color: #4CAF50;">Booking Confirmed!</h1>
       <p>Hi ${customer_name},</p>
-      <p>Thank you for booking with My Bounce Place! Your bounce house rental has been confirmed.</p>
+      <p>Thank you for booking with ${BUSINESS_NAME}! Your bounce house rental has been confirmed.</p>
 
       <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h2 style="margin-top: 0;">Booking Details</h2>
@@ -85,10 +89,10 @@ async function sendBookingConfirmation(booking) {
         <li>Don't forget to sign the waiver before your event!</li>
       </ul>
 
-      <p>If you have any questions, please contact us at <a href="tel:3852888065">(385) 288-8065</a> or reply to this email.</p>
+      <p>If you have any questions, please contact us at <a href="tel:${BUSINESS_PHONE.replace(/\D/g, '')}">${BUSINESS_PHONE}</a> or reply to this email.</p>
 
       <p>We look forward to making your event bounce-tastic!</p>
-      <p>- The My Bounce Place Team</p>
+      <p>- The ${BUSINESS_NAME} Team</p>
     </div>
   `;
 
@@ -125,7 +129,7 @@ async function sendBookingConfirmation(booking) {
   // Send to customer
   await sendEmail({
     to: customer_email,
-    subject: 'Your My Bounce Place Booking is Confirmed!',
+    subject: `Your ${BUSINESS_NAME} Booking is Confirmed!`,
     html: customerHtml,
   });
 
